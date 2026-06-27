@@ -1,0 +1,8 @@
+* text=auto
+*.cs text eol=crlf
+*.xml text eol=crlf
+*.csv text eol=crlf
+*.md text eol=crlf
+*.yml text eol=lf
+*.dll binary
+*.pdb binary

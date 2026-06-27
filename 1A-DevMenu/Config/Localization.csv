@@ -1,0 +1,11 @@
+Key,File,Type,UsedInMainMenu,NoTranslate,KeepLoaded,english
+devMenuTabItems,XUi,XUi,,,,Items
+devMenuTabCheats,XUi,XUi,,,,Cheats
+devMenuTabTileEntities,XUi,XUi,,,,Tile Entities
+devMenuHeaderTooltip,XUi,XUi,,,,Dev Menu
+devMenuRerollLootTooltip,XUi,XUi,,,,Reroll Loot
+devMenuFilterCategory,XUi,XUi,,,,Filter by category
+inpActDevMenuName,UI,Controls Dialog,x,,,Dev Menu
+inpActDevMenuDesc,UI,Controls Dialog,x,,,Open the developer menu.
+devMenuInfiniteAmmoName,buffs,Buff,,,,Dev Menu Unlimited Ammo
+devMenuInfiniteAmmoDesc,buffs,Buff,,,,Unlimited ammo and no item degradation while this buff is active.

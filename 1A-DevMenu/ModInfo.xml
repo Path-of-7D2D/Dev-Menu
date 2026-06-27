@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xml>
+	<Name value="DevMenu" />
+	<DisplayName value="Dev Menu" />
+	<Description value="Adds a V3 developer menu for spawning items, toggling common cheats, and spawning tile entities." />
+	<Author value="Path-of-7D2D" />
+	<Version value="0.1.0" />
+	<Website value="https://github.com/Path-of-7D2D/Dev-Menu" />
+	<SkipWithAntiCheat value="true" />
+</xml>

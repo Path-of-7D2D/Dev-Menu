@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configs>
+
+	<append xpath="/buffs">
+		<buff name="devMenuInfiniteAmmo" name_key="devMenuInfiniteAmmoName" description_key="devMenuInfiniteAmmoDesc" icon="ui_game_symbol_twitch_infinite_ammo" icon_color="175,175,255" remove_on_death="false">
+			<stack_type value="replace" />
+			<display_value value="none" />
+
+			<effect_group>
+				<passive_effect name="InfiniteAmmo" operation="base_set" value="1" />
+				<passive_effect name="DegradationPerUse" operation="base_set" value="0" />
+			</effect_group>
+		</buff>
+	</append>
+
+</configs>

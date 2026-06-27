@@ -1,0 +1,87 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>DevMenu</AssemblyName>
+    <RootNamespace>DevMenu</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <Deterministic>true</Deterministic>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+
+    <!-- Override with -p:Game7D2D="D:\SteamLibrary\steamapps\common\7 Days To Die"
+         or set GAME_7D2D before building. -->
+    <Game7D2D Condition="'$(GAME_7D2D)' != ''">$(GAME_7D2D)</Game7D2D>
+    <Game7D2D Condition="'$(Game7D2D)' == ''">C:\Program Files (x86)\Steam\steamapps\common\7 Days To Die</Game7D2D>
+    <Managed7D2D>$(Game7D2D)\7DaysToDie_Data\Managed</Managed7D2D>
+    <Harmony7D2D>$(Game7D2D)\Mods\0_TFP_Harmony</Harmony7D2D>
+    <ModDeployDir>$(MSBuildProjectDirectory)\..\..\1A-DevMenu</ModDeployDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(Managed7D2D)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(Managed7D2D)\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="LogLibrary">
+      <HintPath>$(Managed7D2D)\LogLibrary.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(Harmony7D2D)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="InControl">
+      <HintPath>$(Managed7D2D)\InControl.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(Managed7D2D)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(Managed7D2D)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ModConfigFiles Include="$(MSBuildProjectDirectory)\Config\**\*.*" />
+  </ItemGroup>
+
+  <Target Name="DeployToModFolder" AfterTargets="Build">
+    <MakeDir Directories="$(ModDeployDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModDeployDir)" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="@(ModConfigFiles)"
+          DestinationFiles="@(ModConfigFiles->'$(ModDeployDir)\Config\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="false" />
+    <Message Importance="high" Text="Deployed $(TargetFileName) -&gt; $(ModDeployDir)" />
+  </Target>
+
+  <Target Name="InstallToGameMods" AfterTargets="Build"
+          Condition="'$(InstallToGame)' != 'false' and Exists('$(Game7D2D)\Mods')">
+    <PropertyGroup>
+      <GameModDir>$(Game7D2D)\Mods\1A-DevMenu</GameModDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(GameModDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameModDir)" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="$(ModDeployDir)\ModInfo.xml" DestinationFolder="$(GameModDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(ModConfigFiles)"
+          DestinationFiles="@(ModConfigFiles->'$(GameModDir)\Config\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="false" />
+    <Message Importance="high" Text="Installed to game: $(GameModDir)" />
+  </Target>
+
+</Project>

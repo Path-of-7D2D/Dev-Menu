@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configs>
+
+	<append xpath="/windows/window[@name='windowPagingHeader']">
+		<iconbutton pos="376,-21" depth="3" selectable="true" collider_scale="1.5" name="devMenu" sprite="ui_game_symbol_computer" tooltip_key="devMenuHeaderTooltip" snap="false" gamepad_selectable="false" />
+	</append>
+
+	<append xpath="/windows/window[@name='windowLooting']/rect[@name='header']/rect[@controller='ContainerStandardControls']">
+		<button depth="3" name="btnDevMenuRerollLoot" sprite="ui_game_symbol_loot_sack" tooltip_key="devMenuRerollLootTooltip" pos="114, -22" style="icon32px, press, hover" pivot="center" sound="[paging_click]" />
+	</append>
+
+	<append xpath="/windows">
+		<window name="devMenu" anchor="Center" pos="-560,400" width="1120" height="800" controller="DevMenu.DevMenuWindow, DevMenu" cursor_area="true">
+			<rect name="header" pos="0,0" width="1120" height="43" depth="10">
+				<headerbg width="1120" />
+				<sprite depth="1" name="windowIcon" style="icon32px" pos="7,-5" sprite="ui_game_symbol_lightbulb" />
+				<label style="header.name" pos="44,-6" width="780" text="Dev Menu" />
+			</rect>
+
+			<rect name="content" pos="0,-46" width="1120" height="700" depth="1">
+				<sprite depth="1" name="backgroundMain" sprite="menu_empty3px" pos="0,0" width="1120" height="700" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.92" />
+				<sprite depth="2" name="border" sprite="menu_empty3px" pos="0,0" width="1120" height="700" color="[black]" type="sliced" fillcenter="false" globalopacitymod="0.95" />
+
+				<rect name="tabs" controller="TabSelector" pos="10,-10" width="1100" height="680" select_tab_contents_on_open="true" use_page_buttons="true">
+					<rect name="tabsHeader" height="39" depth="4">
+						<sprite depth="0" name="backgroundMainTabs" sprite="menu_empty3px" color="0,0,0,210" type="sliced" fillcenter="true" width="1100" height="39" />
+						<grid name="tabButtons" pos="3,-2" depth="2" rows="1" cols="3" cell_width="220" cell_height="36" repeat_content="true" arrangement="horizontal">
+							<rect controller="TabSelectorButton">
+								<simplebutton name="tabButton" depth="2" pos="-1,0" width="210" height="36" font_size="30" bordercolor="[transparent]" defaultcolor="[darkGrey]" selectedsprite="menu_empty" selectedcolor="[mediumGrey]" foregroundlayer="false" caption="{tab_name_localized}" snap="false" gamepad_selectable="false" />
+								<sprite depth="8" sprite="menu_empty2px" pos="208,0" width="2" height="35" color="[black]" />
+							</rect>
+						</grid>
+					</rect>
+
+					<rect name="tabsContents" depth="5" pos="0,-42" width="1100" height="620">
+						<rect controller="TabSelectorTab" tab_key="items" tab_caption_key="devMenuTabItems">
+							<rect name="itemCategories" pos="0,0" width="220" height="560" controller="DevMenu.DevMenuItemCategoryList, DevMenu" clear_searchtext_on_open="true" clear_selection_on_open="false" cursor_controllable="true">
+								<sprite depth="1" name="categoryBackground" sprite="menu_empty3px" pos="0,0" width="220" height="560" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.78" />
+								<rect depth="4" name="categoryHeader" pos="0,0" width="220" height="44">
+									<label pos="8,-9" width="140" height="28" text="Categories" font_size="24" color="[white]" />
+									<label pos="160,-10" width="52" height="28" text="Count" font_size="20" justify="right" color="[white]" />
+								</rect>
+								<grid depth="10" name="list" pos="0,-48" width="220" height="510" rows="15" cols="1" cell_width="220" cell_height="34" repeat_content="true" arrangement="vertical">
+									<dev_menu_item_category_entry width="220" height="34" />
+								</grid>
+							</rect>
+
+							<rect name="items" pos="230,0" width="850" height="560" controller="DevMenu.DevMenuItemList, DevMenu" clear_searchtext_on_open="true" clear_selection_on_open="true" cursor_controllable="true">
+								<rect depth="4" name="searchControls" pos="0,0" width="850" height="44">
+									<sprite depth="1" name="searchBackground" sprite="menu_empty3px" pos="0,0" width="850" height="44" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.85" />
+									<sprite style="icon30px" depth="4" name="searchIcon" sprite="ui_game_symbol_search" color="[white]" pos="14,-22" pivot="center" />
+									<textfield depth="5" name="searchInput" pos="38,-8" width="360" height="28" font_size="24" search_field="true" close_group_on_tab="true" clear_button="true" />
+									<togglebutton depth="5" name="toggleCategoryFilter" caption_key="devMenuFilterCategory" width="210" height="32" pos="415,-6" toggle_value="true" />
+									<label depth="5" name="countLabel" pos="642,-8" width="80" height="28" text="{entrycountfiltered}/{entrycounttotal}" font_size="22" justify="right" pivot="top_left" color="[white]" />
+									<rect depth="5" name="pagerArea" pos="732,-4" width="108" height="36">
+										<pager name="pager" pos="1,-6" contents_parent="items" />
+									</rect>
+								</rect>
+
+								<rect depth="4" name="columns" pos="0,-48" width="850" height="28">
+									<label pos="8,-4" width="110" height="22" text="Category" font_size="20" color="[white]" />
+									<label pos="130,-4" width="245" height="22" text="Name" font_size="20" color="[white]" />
+									<label pos="390,-4" width="245" height="22" text="Item" font_size="20" color="[white]" />
+									<label pos="650,-4" width="50" height="22" text="Tier" font_size="20" color="[white]" />
+									<label pos="712,-4" width="130" height="22" text="Tags" font_size="20" color="[white]" />
+								</rect>
+
+								<grid depth="10" name="list" pos="0,-78" width="850" height="476" rows="14" cols="1" cell_width="850" cell_height="34" repeat_content="true" arrangement="vertical">
+									<dev_menu_item_entry width="850" height="34" />
+								</grid>
+							</rect>
+
+							<label name="selectedCategoryLabel" pos="0,-592" width="220" height="28" text="{selectedcategory}" font_size="22" color="[white]" />
+							<label name="qualityLabel" pos="230,-592" width="110" height="28" text="{selectedquality}" font_size="24" color="[white]" />
+							<simplebutton name="btnQuality1" caption="Q1" width="54" height="32" depth="6" pos="330,-586" selectedsprite="ui_game_select_row" selectedcolor="[white]" />
+							<simplebutton name="btnQuality2" caption="Q2" width="54" height="32" depth="6" pos="382,-586" selectedsprite="ui_game_select_row" selectedcolor="[white]" />
+							<simplebutton name="btnQuality3" caption="Q3" width="54" height="32" depth="6" pos="434,-586" selectedsprite="ui_game_select_row" selectedcolor="[white]" />
+							<simplebutton name="btnQuality4" caption="Q4" width="54" height="32" depth="6" pos="486,-586" selectedsprite="ui_game_select_row" selectedcolor="[white]" />
+							<simplebutton name="btnQuality5" caption="Q5" width="54" height="32" depth="6" pos="538,-586" selectedsprite="ui_game_select_row" selectedcolor="[white]" />
+							<simplebutton name="btnQuality6" caption="Q6" width="54" height="32" depth="6" pos="590,-586" selectedsprite="ui_game_select_row" selectedcolor="[white]" />
+							<simplebutton name="btnSpawnItemOne" caption="Spawn x1" width="180" height="36" depth="6" pos="690,-585" />
+							<simplebutton name="btnSpawnItemTen" caption="Spawn x10" width="180" height="36" depth="6" pos="890,-585" />
+						</rect>
+
+						<rect controller="TabSelectorTab" tab_key="cheats" tab_caption_key="devMenuTabCheats">
+							<rect name="cheats" pos="0,0" width="1080" height="560" controller="DevMenu.DevMenuCheatList, DevMenu" clear_searchtext_on_open="true" clear_selection_on_open="true" cursor_controllable="true">
+								<rect depth="4" name="searchControls" pos="0,0" width="1080" height="44">
+									<sprite depth="1" name="searchBackground" sprite="menu_empty3px" pos="0,0" width="1080" height="44" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.85" />
+									<sprite style="icon30px" depth="4" name="searchIcon" sprite="ui_game_symbol_search" color="[white]" pos="14,-22" pivot="center" />
+									<textfield depth="5" name="searchInput" pos="38,-8" width="650" height="28" font_size="24" search_field="true" close_group_on_tab="true" clear_button="true" />
+									<label depth="5" name="countLabel" pos="732,-8" width="125" height="28" text="{entrycountfiltered}/{entrycounttotal}" font_size="22" justify="right" pivot="top_left" color="[white]" />
+									<rect depth="5" name="pagerArea" pos="918,-4" width="152" height="36">
+										<pager name="pager" pos="1,-6" contents_parent="cheats" />
+									</rect>
+								</rect>
+
+								<rect depth="4" name="columns" pos="0,-48" width="1080" height="28">
+									<label pos="8,-4" width="250" height="22" text="Cheat" font_size="20" color="[white]" />
+									<label pos="280,-4" width="560" height="22" text="Action" font_size="20" color="[white]" />
+									<label pos="860,-4" width="210" height="22" text="Status" font_size="20" justify="right" color="[white]" />
+								</rect>
+
+								<grid depth="10" name="list" pos="0,-78" width="1080" height="476" rows="11" cols="1" cell_width="1080" cell_height="42" repeat_content="true" arrangement="vertical">
+									<dev_menu_cheat_entry width="1080" height="42" />
+								</grid>
+							</rect>
+
+							<simplebutton name="btnToggleCheat" caption="Run Selected" width="240" height="36" depth="6" pos="830,-585" />
+						</rect>
+
+						<rect controller="TabSelectorTab" tab_key="tileEntities" tab_caption_key="devMenuTabTileEntities">
+							<rect name="tileEntities" pos="0,0" width="1080" height="560" controller="DevMenu.LootableTileEntityList, DevMenu" clear_searchtext_on_open="true" clear_selection_on_open="true" cursor_controllable="true">
+								<rect depth="4" name="searchControls" pos="0,0" width="1080" height="44">
+									<sprite depth="1" name="searchBackground" sprite="menu_empty3px" pos="0,0" width="1080" height="44" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.85" />
+									<sprite style="icon30px" depth="4" name="searchIcon" sprite="ui_game_symbol_search" color="[white]" pos="14,-22" pivot="center" />
+									<textfield depth="5" name="searchInput" pos="38,-8" width="650" height="28" font_size="24" search_field="true" close_group_on_tab="true" clear_button="true" />
+									<label depth="5" name="countLabel" pos="732,-8" width="125" height="28" text="{entrycountfiltered}/{entrycounttotal}" font_size="22" justify="right" pivot="top_left" color="[white]" />
+									<rect depth="5" name="pagerArea" pos="918,-4" width="152" height="36">
+										<pager name="pager" pos="1,-6" contents_parent="tileEntities" />
+									</rect>
+								</rect>
+
+								<rect depth="4" name="columns" pos="0,-48" width="1080" height="28">
+									<label pos="8,-4" width="350" height="22" text="Name" font_size="20" color="[white]" />
+									<label pos="370,-4" width="350" height="22" text="Block" font_size="20" color="[white]" />
+									<label pos="732,-4" width="230" height="22" text="Loot list" font_size="20" color="[white]" />
+									<label pos="974,-4" width="98" height="22" text="Tags" font_size="20" color="[white]" />
+								</rect>
+
+								<grid depth="10" name="list" pos="0,-78" width="1080" height="476" rows="14" cols="1" cell_width="1080" cell_height="34" repeat_content="true" arrangement="vertical">
+									<dev_menu_tile_entity_entry width="1080" height="34" />
+								</grid>
+							</rect>
+
+							<simplebutton name="btnSpawnTileEntity" caption="Spawn Selected" width="240" height="36" depth="6" pos="830,-585" />
+						</rect>
+					</rect>
+				</rect>
+			</rect>
+
+			<simplebutton name="btnReload" caption="Reload Catalogs" width="220" height="36" depth="3" pos="640,-750" />
+			<simplebutton name="btnClose" caption="Close" width="180" height="36" depth="3" pos="880,-750" />
+		</window>
+	</append>
+
+</configs>
