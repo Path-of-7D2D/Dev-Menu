@@ -9,12 +9,17 @@ namespace DevMenu
 
         private XUiC_DevMenuItemCategoryList categoryList;
         private XUiC_DevMenuItemList itemList;
+        private XUiC_DevMenuEntityCategoryList entityCategoryList;
+        private XUiC_DevMenuEntityList entityList;
         private XUiC_DevMenuCheatList cheatList;
         private XUiC_LootableTileEntityList tileEntityList;
 
         private XUiC_ToggleButton categoryFilterToggle;
+        private XUiC_ToggleButton entityCategoryFilterToggle;
         private XUiC_SimpleButton spawnItemOneButton;
         private XUiC_SimpleButton spawnItemTenButton;
+        private XUiC_SimpleButton spawnEntityOneButton;
+        private XUiC_SimpleButton spawnEntityFiveButton;
         private XUiC_SimpleButton toggleCheatButton;
         private XUiC_SimpleButton spawnTileEntityButton;
         private XUiC_SimpleButton reloadButton;
@@ -45,6 +50,25 @@ namespace DevMenu
                 categoryFilterToggle.OnValueChanged += CategoryFilterToggle_OnValueChanged;
             }
 
+            entityCategoryList = GetChildById("entityCategories") as XUiC_DevMenuEntityCategoryList;
+            if (entityCategoryList != null)
+            {
+                entityCategoryList.ListEntryClicked += EntityCategoryList_ListEntryClicked;
+            }
+
+            entityList = GetChildById("entities") as XUiC_DevMenuEntityList;
+            if (entityList != null)
+            {
+                entityList.ListEntryDoubleClicked += EntityList_ListEntryDoubleClicked;
+            }
+
+            entityCategoryFilterToggle = GetToggleButton("toggleEntityCategoryFilter");
+            if (entityCategoryFilterToggle != null)
+            {
+                entityCategoryFilterToggle.Value = DevMenuEntityFilterState.FilterByCategory;
+                entityCategoryFilterToggle.OnValueChanged += EntityCategoryFilterToggle_OnValueChanged;
+            }
+
             cheatList = GetChildById("cheats") as XUiC_DevMenuCheatList;
             if (cheatList != null)
             {
@@ -67,6 +91,18 @@ namespace DevMenu
             if (spawnItemTenButton != null)
             {
                 spawnItemTenButton.OnPressed += SpawnItemTenButton_OnPressed;
+            }
+
+            spawnEntityOneButton = GetSimpleButton("btnSpawnEntityOne");
+            if (spawnEntityOneButton != null)
+            {
+                spawnEntityOneButton.OnPressed += SpawnEntityOneButton_OnPressed;
+            }
+
+            spawnEntityFiveButton = GetSimpleButton("btnSpawnEntityFive");
+            if (spawnEntityFiveButton != null)
+            {
+                spawnEntityFiveButton.OnPressed += SpawnEntityFiveButton_OnPressed;
             }
 
             WireQualityButton("btnQuality1", 1);
@@ -136,6 +172,12 @@ namespace DevMenu
             return "Category: " + DevMenuItemFilterState.SelectedCategory;
         }
 
+        [XuiXmlBinding("selectedentitycategory")]
+        public string BindingSelectedEntityCategory()
+        {
+            return "Category: " + DevMenuEntityFilterState.SelectedCategory;
+        }
+
         private void SpawnItemOneButton_OnPressed(XUiController sender, int mouseButton)
         {
             SpawnSelectedItem(1);
@@ -144,6 +186,16 @@ namespace DevMenu
         private void SpawnItemTenButton_OnPressed(XUiController sender, int mouseButton)
         {
             SpawnSelectedItem(10);
+        }
+
+        private void SpawnEntityOneButton_OnPressed(XUiController sender, int mouseButton)
+        {
+            SpawnSelectedEntity(1);
+        }
+
+        private void SpawnEntityFiveButton_OnPressed(XUiController sender, int mouseButton)
+        {
+            SpawnSelectedEntity(5);
         }
 
         private void ToggleCheatButton_OnPressed(XUiController sender, int mouseButton)
@@ -155,6 +207,13 @@ namespace DevMenu
         {
             DevMenuItemFilterState.FilterByCategory = newValue;
             itemList?.RebuildList(_resetFilter: false);
+            RefreshBindingsSelfAndChildren();
+        }
+
+        private void EntityCategoryFilterToggle_OnValueChanged(XUiC_ToggleButton sender, bool newValue)
+        {
+            DevMenuEntityFilterState.FilterByCategory = newValue;
+            entityList?.RebuildList(_resetFilter: false);
             RefreshBindingsSelfAndChildren();
         }
 
@@ -174,6 +233,25 @@ namespace DevMenu
             }
 
             itemList?.RebuildList(_resetFilter: false);
+            RefreshBindingsSelfAndChildren();
+        }
+
+        private void EntityCategoryList_ListEntryClicked(XUiC_List<DevMenuEntityCategoryEntry> list, DevMenuEntityCategoryEntry entry)
+        {
+            if (entry == null)
+            {
+                return;
+            }
+
+            DevMenuEntityFilterState.SelectedCategory = entry.Category;
+            DevMenuEntityFilterState.FilterByCategory = true;
+
+            if (entityCategoryFilterToggle != null && !entityCategoryFilterToggle.Value)
+            {
+                entityCategoryFilterToggle.Value = true;
+            }
+
+            entityList?.RebuildList(_resetFilter: false);
             RefreshBindingsSelfAndChildren();
         }
 
@@ -205,14 +283,17 @@ namespace DevMenu
         private void ReloadButton_OnPressed(XUiController sender, int mouseButton)
         {
             DevMenuItemCatalog.Reload();
+            DevMenuEntityCatalog.Reload();
             LootableTileEntityCatalog.Reload();
 
             categoryList?.RebuildList(_resetFilter: false);
             itemList?.RebuildList(_resetFilter: false);
+            entityCategoryList?.RebuildList(_resetFilter: false);
+            entityList?.RebuildList(_resetFilter: false);
             tileEntityList?.RebuildList(_resetFilter: false);
             cheatList?.RebuildList(_resetFilter: false);
 
-            Output("Reloaded item and tile entity catalogs.");
+            Output("Reloaded item, entity, and tile entity catalogs.");
         }
 
         private void CloseButton_OnPressed(XUiController sender, int mouseButton)
@@ -223,6 +304,11 @@ namespace DevMenu
         private void ItemList_ListEntryDoubleClicked(XUiC_List<DevMenuItemEntry> list, DevMenuItemEntry entry)
         {
             SpawnItem(entry, 1, selectedItemQuality);
+        }
+
+        private void EntityList_ListEntryDoubleClicked(XUiC_List<DevMenuEntityEntry> list, DevMenuEntityEntry entry)
+        {
+            SpawnEntity(entry, 1);
         }
 
         private void CheatList_ListEntryDoubleClicked(XUiC_List<DevMenuCheatEntry> list, DevMenuCheatEntry entry)
@@ -251,6 +337,24 @@ namespace DevMenu
             }
 
             SpawnItem(entry, count, selectedItemQuality);
+        }
+
+        private void SpawnSelectedEntity(int count)
+        {
+            if (entityList == null)
+            {
+                Output("Entity list is not available.");
+                return;
+            }
+
+            DevMenuEntityEntry entry = entityList.SelectedEntryData;
+            if (entry == null)
+            {
+                Output("Select an entity first.");
+                return;
+            }
+
+            SpawnEntity(entry, count);
         }
 
         private void ToggleSelectedCheat()
@@ -297,6 +401,17 @@ namespace DevMenu
             }
 
             DevMenuItemSpawnService.RequestGiveToPrimaryPlayer(entry.ItemName, count, quality, out string message);
+            Output(message);
+        }
+
+        private static void SpawnEntity(DevMenuEntityEntry entry, int count)
+        {
+            if (entry == null)
+            {
+                return;
+            }
+
+            DevMenuEntitySpawnService.RequestSpawnInFrontOfPrimaryPlayer(entry.EntityName, count, out string message);
             Output(message);
         }
 

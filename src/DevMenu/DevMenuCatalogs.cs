@@ -329,6 +329,347 @@ namespace DevMenu
     }
 
     [Preserve]
+    public static class DevMenuEntityFilterState
+    {
+        public const string AllCategory = "All";
+        public const string OtherCategory = "Other";
+
+        public static string SelectedCategory { get; set; } = AllCategory;
+
+        public static bool FilterByCategory { get; set; } = true;
+
+        public static bool IsCategorySelected(DevMenuEntityEntry entry)
+        {
+            return entry != null &&
+                (SelectedCategory == AllCategory ||
+                entry.Category.Equals(SelectedCategory, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    [Preserve]
+    public static class DevMenuEntityCatalog
+    {
+        private static readonly List<DevMenuEntityEntry> cachedEntries = new List<DevMenuEntityEntry>();
+        private static readonly List<DevMenuEntityCategoryEntry> cachedCategories = new List<DevMenuEntityCategoryEntry>();
+        private static bool loaded;
+
+        public static IReadOnlyList<DevMenuEntityEntry> Entries
+        {
+            get
+            {
+                EnsureLoaded();
+                return cachedEntries;
+            }
+        }
+
+        public static IReadOnlyList<DevMenuEntityCategoryEntry> Categories
+        {
+            get
+            {
+                EnsureLoaded();
+                return cachedCategories;
+            }
+        }
+
+        public static void Reload()
+        {
+            loaded = false;
+            EnsureLoaded();
+        }
+
+        public static bool IsKnownEntity(string entityName, out DevMenuEntityEntry entry)
+        {
+            EnsureLoaded();
+            entry = null;
+
+            for (int i = 0; i < cachedEntries.Count; i++)
+            {
+                if (cachedEntries[i].EntityName.Equals(entityName, StringComparison.OrdinalIgnoreCase))
+                {
+                    entry = cachedEntries[i];
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void EnsureLoaded()
+        {
+            if (loaded)
+            {
+                return;
+            }
+
+            cachedEntries.Clear();
+            cachedCategories.Clear();
+
+            if (EntityClass.list == null || EntityClass.list.Dict == null)
+            {
+                return;
+            }
+
+            loaded = true;
+            var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (KeyValuePair<int, EntityClass> pair in EntityClass.list.Dict)
+            {
+                int entityClassId = pair.Key;
+                EntityClass entityClass = pair.Value;
+                if (entityClass == null || entityClassId <= 0)
+                {
+                    continue;
+                }
+
+                string entityName = GetEntityName(entityClass, entityClassId);
+                if (string.IsNullOrEmpty(entityName) || !seenNames.Add(entityName))
+                {
+                    continue;
+                }
+
+                string tags = GetTags(entityClass);
+                string entityType = GetEntityType(entityClass);
+                cachedEntries.Add(new DevMenuEntityEntry(
+                    entityClassId,
+                    entityName,
+                    GetDisplayName(entityName),
+                    GetCategory(entityClass, entityName, entityType, tags, out int categorySort),
+                    categorySort,
+                    entityType,
+                    tags));
+            }
+
+            cachedEntries.Sort();
+            RebuildCategories();
+        }
+
+        private static void RebuildCategories()
+        {
+            cachedCategories.Clear();
+            cachedCategories.Add(new DevMenuEntityCategoryEntry(DevMenuEntityFilterState.AllCategory, 0, cachedEntries.Count));
+
+            var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var sortOrders = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            for (int i = 0; i < cachedEntries.Count; i++)
+            {
+                DevMenuEntityEntry entry = cachedEntries[i];
+                if (!counts.ContainsKey(entry.Category))
+                {
+                    counts[entry.Category] = 0;
+                    sortOrders[entry.Category] = entry.CategorySort;
+                }
+
+                counts[entry.Category]++;
+                if (entry.CategorySort < sortOrders[entry.Category])
+                {
+                    sortOrders[entry.Category] = entry.CategorySort;
+                }
+            }
+
+            foreach (KeyValuePair<string, int> count in counts)
+            {
+                cachedCategories.Add(new DevMenuEntityCategoryEntry(count.Key, sortOrders[count.Key], count.Value));
+            }
+
+            cachedCategories.Sort();
+        }
+
+        private static string GetEntityName(EntityClass entityClass, int entityClassId)
+        {
+            if (!string.IsNullOrEmpty(entityClass.entityClassName))
+            {
+                return entityClass.entityClassName;
+            }
+
+            try
+            {
+                return EntityClass.GetEntityClassName(entityClassId);
+            }
+            catch (Exception)
+            {
+                return "";
+            }
+        }
+
+        private static string GetDisplayName(string entityName)
+        {
+            try
+            {
+                string localizedName = Localization.Get(entityName);
+                return string.IsNullOrEmpty(localizedName) ? entityName : localizedName;
+            }
+            catch (Exception)
+            {
+                return entityName;
+            }
+        }
+
+        private static string GetCategory(EntityClass entityClass, string entityName, string entityType, string tags, out int categorySort)
+        {
+            string name = entityName.ToLowerInvariant();
+            string haystack = (entityName + "," + entityType + "," + tags + "," + GetClassName(entityClass) + "," + GetModelTypeName(entityClass)).ToLowerInvariant();
+
+            if (HasEntityFlag(entityClass, EntityFlags.Zombie) || entityType.Equals("Zombie", StringComparison.OrdinalIgnoreCase) || ContainsAny(name, haystack, "zombie"))
+            {
+                if (ContainsAny(name, haystack, "infernal"))
+                {
+                    categorySort = 16;
+                    return "Infernal Zombies";
+                }
+
+                if (ContainsAny(name, haystack, "charged"))
+                {
+                    categorySort = 15;
+                    return "Charged Zombies";
+                }
+
+                if (ContainsAny(name, haystack, "radiated"))
+                {
+                    categorySort = 14;
+                    return "Radiated Zombies";
+                }
+
+                if (ContainsAny(name, haystack, "feral"))
+                {
+                    categorySort = 13;
+                    return "Feral Zombies";
+                }
+
+                if (ContainsAny(name, haystack, "boss", "special", "screamer", "demolition", "mutant", "spider", "burnt", "crawler"))
+                {
+                    categorySort = 12;
+                    return "Special Zombies";
+                }
+
+                categorySort = 10;
+                return "Zombies";
+            }
+
+            if (HasEntityFlag(entityClass, EntityFlags.Animal) ||
+                entityType.Equals("Animal", StringComparison.OrdinalIgnoreCase) ||
+                entityClass.bIsAnimalEntity ||
+                ContainsAny(name, haystack, "animal", "bear", "boar", "chicken", "coyote", "deer", "dog", "lion", "rabbit", "snake", "stag", "vulture", "wolf"))
+            {
+                if (entityClass.bIsEnemyEntity ||
+                    ContainsAny(name, haystack, "bear", "boar", "coyote", "direwolf", "dog", "lion", "mountain", "snake", "vulture", "wolf"))
+                {
+                    categorySort = 30;
+                    return "Hostile Animals";
+                }
+
+                categorySort = 31;
+                return "Passive Animals";
+            }
+
+            if (HasEntityFlag(entityClass, EntityFlags.Bandit) ||
+                entityType.Equals("Bandit", StringComparison.OrdinalIgnoreCase) ||
+                ContainsAny(name, haystack, "bandit"))
+            {
+                categorySort = 40;
+                return "Bandits";
+            }
+
+            if (ContainsAny(name, haystack, "trader", "npc", "human"))
+            {
+                categorySort = 50;
+                return "NPCs/Traders";
+            }
+
+            if (ContainsAny(name, haystack, "drone"))
+            {
+                categorySort = 60;
+                return "Drones";
+            }
+
+            if (ContainsAny(name, haystack, "vehicle", "bicycle", "gyrocopter", "minibike", "motorcycle", "truck"))
+            {
+                categorySort = 70;
+                return "Vehicles";
+            }
+
+            if (ContainsAny(name, haystack, "backpack", "loot", "dropped", "supply", "item", "fallingblock", "fallingtree"))
+            {
+                categorySort = 80;
+                return "Loot/Utility";
+            }
+
+            if (HasEntityFlag(entityClass, EntityFlags.Player) ||
+                entityType.Equals("Player", StringComparison.OrdinalIgnoreCase) ||
+                ContainsAny(name, haystack, "player"))
+            {
+                categorySort = 90;
+                return "Players";
+            }
+
+            categorySort = 999;
+            return DevMenuEntityFilterState.OtherCategory;
+        }
+
+        private static bool HasEntityFlag(EntityClass entityClass, EntityFlags flag)
+        {
+            return entityClass != null && (entityClass.entityFlags & flag) == flag;
+        }
+
+        private static string GetEntityType(EntityClass entityClass)
+        {
+            if (entityClass?.Properties == null)
+            {
+                return "";
+            }
+
+            string value;
+            if (entityClass.Properties.TryGetValue(EntityClass.PropEntityType, out value))
+            {
+                return value ?? "";
+            }
+
+            return "";
+        }
+
+        private static string GetTags(EntityClass entityClass)
+        {
+            if (entityClass?.Properties == null)
+            {
+                return "";
+            }
+
+            string value;
+            if (entityClass.Properties.TryGetValue(EntityClass.PropTags, out value))
+            {
+                return value ?? "";
+            }
+
+            return "";
+        }
+
+        private static string GetClassName(EntityClass entityClass)
+        {
+            return entityClass?.classname == null ? "" : entityClass.classname.Name;
+        }
+
+        private static string GetModelTypeName(EntityClass entityClass)
+        {
+            return entityClass?.modelType == null ? "" : entityClass.modelType.Name;
+        }
+
+        private static bool ContainsAny(string entityName, string haystack, params string[] values)
+        {
+            for (int i = 0; i < values.Length; i++)
+            {
+                string value = values[i];
+                if (entityName.StartsWith(value, StringComparison.OrdinalIgnoreCase) ||
+                    haystack.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    [Preserve]
     public static class DevMenuCheatCatalog
     {
         private static readonly List<DevMenuCheatEntry> entries = new List<DevMenuCheatEntry>

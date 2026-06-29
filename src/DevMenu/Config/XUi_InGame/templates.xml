@@ -12,6 +12,16 @@
 			</rect>
 		</dev_menu_item_category_entry>
 
+		<dev_menu_entity_category_entry width="220" height="34">
+			<rect name="entry" width="${width}" height="${height}" controller="DevMenu.DevMenuEntityCategoryList+EntryController, DevMenu" style="press, hover, scroll" sound_play_on_hover="[default_hover]">
+				<sprite depth="1" name="rowBackground" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.68" visible="{hasentry}" />
+				<sprite depth="2" name="selection" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[mediumGrey]" type="sliced" fillcenter="true" globalopacitymod="0.65" visible="{hovered}" />
+				<sprite depth="3" name="selected" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[white]" type="sliced" fillcenter="true" globalopacitymod="0.28" visible="{isselected}" />
+				<label depth="4" name="name" pos="8,-7" width="150" height="24" text="{name}" font_size="24" justify="left" pivot="top_left" />
+				<label depth="4" name="count" pos="162,-8" width="50" height="24" text="{count}" font_size="22" justify="right" pivot="top_left" color="[white]" />
+			</rect>
+		</dev_menu_entity_category_entry>
+
 		<dev_menu_item_entry width="1080" height="34">
 			<rect name="entry" width="${width}" height="${height}" controller="DevMenu.DevMenuItemList+EntryController, DevMenu" style="press, hover, scroll" on_doubleclick="true" sound_play_on_hover="[default_hover]">
 				<sprite depth="1" name="rowBackground" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.68" visible="{hasentry}" />
@@ -24,6 +34,19 @@
 				<label depth="4" name="tags" pos="712,-8" width="${width-720}" height="24" text="{tags}" font_size="20" justify="left" pivot="top_left" color="[lightGrey]" />
 			</rect>
 		</dev_menu_item_entry>
+
+		<dev_menu_entity_entry width="1080" height="34">
+			<rect name="entry" width="${width}" height="${height}" controller="DevMenu.DevMenuEntityList+EntryController, DevMenu" style="press, hover, scroll" on_doubleclick="true" sound_play_on_hover="[default_hover]">
+				<sprite depth="1" name="rowBackground" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.68" visible="{hasentry}" />
+				<sprite depth="2" name="selection" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[mediumGrey]" type="sliced" fillcenter="true" globalopacitymod="0.65" visible="{hovered}" />
+				<sprite depth="3" name="selected" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[white]" type="sliced" fillcenter="true" globalopacitymod="0.28" visible="{isselected}" />
+				<label depth="4" name="category" pos="8,-8" width="130" height="24" text="{category}" font_size="22" justify="left" pivot="top_left" color="[white]" />
+				<label depth="4" name="name" pos="150,-7" width="255" height="24" text="{name}" font_size="24" justify="left" pivot="top_left" />
+				<label depth="4" name="entityName" pos="420,-8" width="240" height="24" text="{entityname}" font_size="22" justify="left" pivot="top_left" color="[white]" />
+				<label depth="4" name="entityType" pos="675,-8" width="90" height="24" text="{entitytype}" font_size="22" justify="left" pivot="top_left" color="[white]" />
+				<label depth="4" name="tags" pos="780,-8" width="${width-788}" height="24" text="{tags}" font_size="20" justify="left" pivot="top_left" color="[lightGrey]" />
+			</rect>
+		</dev_menu_entity_entry>
 
 		<dev_menu_cheat_entry width="1080" height="42">
 			<rect name="entry" width="${width}" height="${height}" controller="DevMenu.DevMenuCheatList+EntryController, DevMenu" style="press, hover, scroll" on_doubleclick="true" sound_play_on_hover="[default_hover]">

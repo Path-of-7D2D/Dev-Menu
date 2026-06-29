@@ -1,5 +1,6 @@
 Key,File,Type,UsedInMainMenu,NoTranslate,KeepLoaded,english
 devMenuTabItems,XUi,XUi,,,,Items
+devMenuTabEntities,XUi,XUi,,,,Entities
 devMenuTabCheats,XUi,XUi,,,,Cheats
 devMenuTabTileEntities,XUi,XUi,,,,Tile Entities
 devMenuHeaderTooltip,XUi,XUi,,,,Dev Menu

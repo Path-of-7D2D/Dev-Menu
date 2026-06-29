@@ -24,7 +24,7 @@
 				<rect name="tabs" controller="TabSelector" pos="10,-10" width="1100" height="680" select_tab_contents_on_open="true" use_page_buttons="true">
 					<rect name="tabsHeader" height="39" depth="4">
 						<sprite depth="0" name="backgroundMainTabs" sprite="menu_empty3px" color="0,0,0,210" type="sliced" fillcenter="true" width="1100" height="39" />
-						<grid name="tabButtons" pos="3,-2" depth="2" rows="1" cols="3" cell_width="220" cell_height="36" repeat_content="true" arrangement="horizontal">
+						<grid name="tabButtons" pos="3,-2" depth="2" rows="1" cols="4" cell_width="220" cell_height="36" repeat_content="true" arrangement="horizontal">
 							<rect controller="TabSelectorButton">
 								<simplebutton name="tabButton" depth="2" pos="-1,0" width="210" height="36" font_size="30" bordercolor="[transparent]" defaultcolor="[darkGrey]" selectedsprite="menu_empty" selectedcolor="[mediumGrey]" foregroundlayer="false" caption="{tab_name_localized}" snap="false" gamepad_selectable="false" />
 								<sprite depth="8" sprite="menu_empty2px" pos="208,0" width="2" height="35" color="[black]" />
@@ -80,6 +80,48 @@
 							<simplebutton name="btnQuality6" caption="Q6" width="54" height="32" depth="6" pos="590,-586" selectedsprite="ui_game_select_row" selectedcolor="[white]" />
 							<simplebutton name="btnSpawnItemOne" caption="Spawn x1" width="180" height="36" depth="6" pos="690,-585" />
 							<simplebutton name="btnSpawnItemTen" caption="Spawn x10" width="180" height="36" depth="6" pos="890,-585" />
+						</rect>
+
+						<rect controller="TabSelectorTab" tab_key="entities" tab_caption_key="devMenuTabEntities">
+							<rect name="entityCategories" pos="0,0" width="220" height="560" controller="DevMenu.DevMenuEntityCategoryList, DevMenu" clear_searchtext_on_open="true" clear_selection_on_open="false" cursor_controllable="true">
+								<sprite depth="1" name="categoryBackground" sprite="menu_empty3px" pos="0,0" width="220" height="560" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.78" />
+								<rect depth="4" name="categoryHeader" pos="0,0" width="220" height="44">
+									<label pos="8,-9" width="140" height="28" text="Categories" font_size="24" color="[white]" />
+									<label pos="160,-10" width="52" height="28" text="Count" font_size="20" justify="right" color="[white]" />
+								</rect>
+								<grid depth="10" name="list" pos="0,-48" width="220" height="510" rows="15" cols="1" cell_width="220" cell_height="34" repeat_content="true" arrangement="vertical">
+									<dev_menu_entity_category_entry width="220" height="34" />
+								</grid>
+							</rect>
+
+							<rect name="entities" pos="230,0" width="850" height="560" controller="DevMenu.DevMenuEntityList, DevMenu" clear_searchtext_on_open="true" clear_selection_on_open="true" cursor_controllable="true">
+								<rect depth="4" name="searchControls" pos="0,0" width="850" height="44">
+									<sprite depth="1" name="searchBackground" sprite="menu_empty3px" pos="0,0" width="850" height="44" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.85" />
+									<sprite style="icon30px" depth="4" name="searchIcon" sprite="ui_game_symbol_search" color="[white]" pos="14,-22" pivot="center" />
+									<textfield depth="5" name="searchInput" pos="38,-8" width="360" height="28" font_size="24" search_field="true" close_group_on_tab="true" clear_button="true" />
+									<togglebutton depth="5" name="toggleEntityCategoryFilter" caption_key="devMenuFilterCategory" width="210" height="32" pos="415,-6" toggle_value="true" />
+									<label depth="5" name="countLabel" pos="642,-8" width="80" height="28" text="{entrycountfiltered}/{entrycounttotal}" font_size="22" justify="right" pivot="top_left" color="[white]" />
+									<rect depth="5" name="pagerArea" pos="732,-4" width="108" height="36">
+										<pager name="pager" pos="1,-6" contents_parent="entities" />
+									</rect>
+								</rect>
+
+								<rect depth="4" name="columns" pos="0,-48" width="850" height="28">
+									<label pos="8,-4" width="130" height="22" text="Category" font_size="20" color="[white]" />
+									<label pos="150,-4" width="255" height="22" text="Name" font_size="20" color="[white]" />
+									<label pos="420,-4" width="240" height="22" text="Entity" font_size="20" color="[white]" />
+									<label pos="675,-4" width="90" height="22" text="Type" font_size="20" color="[white]" />
+									<label pos="780,-4" width="62" height="22" text="Tags" font_size="20" color="[white]" />
+								</rect>
+
+								<grid depth="10" name="list" pos="0,-78" width="850" height="476" rows="14" cols="1" cell_width="850" cell_height="34" repeat_content="true" arrangement="vertical">
+									<dev_menu_entity_entry width="850" height="34" />
+								</grid>
+							</rect>
+
+							<label name="selectedEntityCategoryLabel" pos="0,-592" width="320" height="28" text="{selectedentitycategory}" font_size="22" color="[white]" />
+							<simplebutton name="btnSpawnEntityOne" caption="Spawn x1" width="180" height="36" depth="6" pos="690,-585" />
+							<simplebutton name="btnSpawnEntityFive" caption="Spawn x5" width="180" height="36" depth="6" pos="890,-585" />
 						</rect>
 
 						<rect controller="TabSelectorTab" tab_key="cheats" tab_caption_key="devMenuTabCheats">

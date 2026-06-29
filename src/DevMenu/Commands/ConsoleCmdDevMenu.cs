@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Platform;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -21,7 +22,7 @@ namespace DevMenu.Commands
 
         public override string getDescription()
         {
-            return "Opens the Dev Menu or runs Dev Menu item, cheat, and tile entity actions.";
+            return "Opens the Dev Menu or runs Dev Menu item, entity, cheat, and tile entity actions.";
         }
 
         public override string getHelp()
@@ -31,6 +32,9 @@ namespace DevMenu.Commands
                 "  devmenu open\n" +
                 "  devmenu items [filter]\n" +
                 "  devmenu item <itemName> [count] [quality 1-6]\n" +
+                "  devmenu entities [filter]\n" +
+                "  devmenu entity <entityName> [count]\n" +
+                "  devmenu entity <entityName> <x> <y> <z> [count] [yaw]\n" +
                 "  devmenu cheats\n" +
                 "  devmenu cheat <key>\n" +
                 "  devmenu tiles [filter]\n" +
@@ -43,6 +47,8 @@ namespace DevMenu.Commands
                 "  devmenu item gunHandgunT1Pistol\n" +
                 "  devmenu item ammo9mmBulletBall 100\n" +
                 "  devmenu item gunHandgunT1Pistol 1 6\n" +
+                "  devmenu entity zombieArlene\n" +
+                "  devmenu entity animalWolf 3\n" +
                 "  devmenu cheat noaggro\n" +
                 "  devmenu tile lootChestHero";
         }
@@ -64,8 +70,9 @@ namespace DevMenu.Commands
             if (IsSubcommand(_params[0], "reload"))
             {
                 DevMenuItemCatalog.Reload();
+                DevMenuEntityCatalog.Reload();
                 LootableTileEntityCatalog.Reload();
-                Output("Reloaded catalogs. Found " + DevMenuItemCatalog.Entries.Count + " items and " + LootableTileEntityCatalog.Entries.Count + " tile entities.");
+                Output("Reloaded catalogs. Found " + DevMenuItemCatalog.Entries.Count + " items, " + DevMenuEntityCatalog.Entries.Count + " entities, and " + LootableTileEntityCatalog.Entries.Count + " tile entities.");
                 return;
             }
 
@@ -78,6 +85,18 @@ namespace DevMenu.Commands
             if (IsSubcommand(_params[0], "item"))
             {
                 GiveItem(_params, _senderInfo);
+                return;
+            }
+
+            if (IsSubcommand(_params[0], "entities"))
+            {
+                ListEntities(_params);
+                return;
+            }
+
+            if (IsSubcommand(_params[0], "entity"))
+            {
+                SpawnEntity(_params, _senderInfo);
                 return;
             }
 
@@ -185,6 +204,83 @@ namespace DevMenu.Commands
             }
 
             DevMenuItemSpawnService.TryGiveToPlayer(entity, parameters[1], count, quality, out string message);
+            Output(message);
+        }
+
+        private static void ListEntities(List<string> parameters)
+        {
+            string filter = parameters.Count > 1 ? string.Join(" ", parameters.GetRange(1, parameters.Count - 1).ToArray()) : null;
+            int shown = 0;
+
+            Output("Entities: " + DevMenuEntityCatalog.Entries.Count);
+            foreach (DevMenuEntityEntry entry in DevMenuEntityCatalog.Entries)
+            {
+                if (!string.IsNullOrEmpty(filter) && !entry.MatchesSearch(filter))
+                {
+                    continue;
+                }
+
+                Output(entry.EntityName + " - " + entry.DisplayName + FormatSuffix(entry.Category) + FormatSuffix(entry.EntityType));
+                shown++;
+                if (shown >= 80)
+                {
+                    Output("Output capped at 80 entries. Refine the filter to narrow the list.");
+                    break;
+                }
+            }
+        }
+
+        private static void SpawnEntity(List<string> parameters, CommandSenderInfo senderInfo)
+        {
+            if (parameters.Count < 2)
+            {
+                Output("Usage: devmenu entity <entityName> [count]");
+                return;
+            }
+
+            string entityName = parameters[1];
+            if (parameters.Count >= 5)
+            {
+                if (!TryParseVector3(parameters, 2, out Vector3 spawnPosition))
+                {
+                    Output("Invalid position. Usage: devmenu entity <entityName> <x> <y> <z> [count] [yaw]");
+                    return;
+                }
+
+                int count = 1;
+                if (parameters.Count >= 6 && !int.TryParse(parameters[5], out count))
+                {
+                    Output("Invalid count. Usage: devmenu entity <entityName> <x> <y> <z> [count] [yaw]");
+                    return;
+                }
+
+                float yaw = 0f;
+                if (parameters.Count >= 7 && !float.TryParse(parameters[6], NumberStyles.Float, CultureInfo.InvariantCulture, out yaw))
+                {
+                    Output("Invalid yaw. Use a numeric Y rotation in degrees.");
+                    return;
+                }
+
+                EntityAlive entity = GetSenderEntity(senderInfo);
+                DevMenuEntitySpawnService.TrySpawnAt(entityName, spawnPosition, new Vector3(0f, yaw, 0f), count, entity, out string spawnMessage);
+                Output(spawnMessage);
+                return;
+            }
+
+            int frontCount = 1;
+            if (parameters.Count >= 3 && !int.TryParse(parameters[2], out frontCount))
+            {
+                Output("Invalid count. Usage: devmenu entity <entityName> [count]");
+                return;
+            }
+
+            EntityAlive senderEntity = GetSenderEntity(senderInfo);
+            if (senderEntity == null && !GameManager.IsDedicatedServer)
+            {
+                senderEntity = GameManager.Instance?.World?.GetPrimaryPlayer();
+            }
+
+            DevMenuEntitySpawnService.TrySpawnInFrontOfPlayer(senderEntity, entityName, frontCount, out string message);
             Output(message);
         }
 
@@ -300,6 +396,14 @@ namespace DevMenu.Commands
 
             blockPos = new Vector3i(x, y, z);
             return true;
+        }
+
+        private static bool TryParseVector3(List<string> parameters, int startIndex, out Vector3 value)
+        {
+            value = Vector3.zero;
+            return float.TryParse(parameters[startIndex], NumberStyles.Float, CultureInfo.InvariantCulture, out value.x) &&
+                float.TryParse(parameters[startIndex + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out value.y) &&
+                float.TryParse(parameters[startIndex + 2], NumberStyles.Float, CultureInfo.InvariantCulture, out value.z);
         }
 
         private static EntityAlive GetSenderEntity(CommandSenderInfo senderInfo)

@@ -3,17 +3,20 @@
 Dev Menu is an in-game developer toolbox for **7 Days to Die V3.0 "Dead Hot
 Summer"**.
 
-It adds one menu for spawning items, running common developer cheats, spawning
-lootable tile entities, and rerolling loot containers while testing.
+It adds one menu for spawning items and entities, running common developer
+cheats, spawning lootable tile entities, and rerolling loot containers while
+testing.
 
 ## Features
 
-- Tabbed in-game Dev Menu with `Items`, `Cheats`, and `Tile Entities` tabs.
+- Tabbed in-game Dev Menu with `Items`, `Entities`, `Cheats`, and `Tile Entities` tabs.
 - Rebindable hotkey in `Options > Controls > Menus`; default key is `/`.
 - Inventory/crafting header icon for opening the menu from the normal UI.
 - `devmenu` and `p7dev` console commands.
 - Categorized item browser with search, category filtering, and Q1-Q6 item tier
   selection.
+- Categorized entity browser with search and category filtering for zombies,
+  animals, NPCs, vehicles, and utility entities.
 - Common cheat toggles and actions for development/testing.
 - Lootable tile entity spawning in front of the player.
 - `Reroll Loot` button on lootable containers to close the container and reset
@@ -54,6 +57,16 @@ The Items tab lets you browse and spawn loaded item definitions.
 - Toggle `Filter by category` when searching across categories.
 - Choose Q1-Q6 before spawning tiered items.
 - Spawn one or ten of the selected item.
+
+## Entities Tab
+
+The Entities tab lets you browse and spawn loaded entity definitions.
+
+- Select a category first, such as zombies, hostile animals, passive animals,
+  NPCs/traders, drones, vehicles, or loot/utility entities.
+- Use search to narrow the current list.
+- Toggle `Filter by category` when searching across categories.
+- Spawn one or five of the selected entity.
 
 ## Cheats Tab
 
@@ -96,6 +109,9 @@ p7dev
 devmenu item gunHandgunT1Pistol
 devmenu item gunHandgunT1Pistol 1 6
 devmenu item ammo9mmBulletBall 100
+devmenu entities zombie
+devmenu entity zombieArlene
+devmenu entity animalWolf 3
 devmenu cheat god
 devmenu cheat ammo
 devmenu cheat noclip

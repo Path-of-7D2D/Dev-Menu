@@ -97,6 +97,100 @@ namespace DevMenu
     }
 
     [Preserve]
+    public class XUiC_DevMenuEntityCategoryList : XUiC_List<DevMenuEntityCategoryEntry>
+    {
+        public override void RebuildList(bool _resetFilter = false)
+        {
+            allEntries.Clear();
+            allEntries.AddRange(DevMenuEntityCatalog.Categories);
+            allEntries.Sort();
+            base.RebuildList(_resetFilter);
+        }
+
+        public override void OnOpen()
+        {
+            RebuildList(_resetFilter: true);
+            base.OnOpen();
+        }
+
+        [Preserve]
+        public class EntryController : XUiC_ListEntry
+        {
+            [XuiXmlBinding("name")]
+            public string BindingName()
+            {
+                return entryData?.Category ?? "";
+            }
+
+            [XuiXmlBinding("count")]
+            public string BindingCount()
+            {
+                return entryData == null ? "" : entryData.Count.ToString();
+            }
+        }
+    }
+
+    [Preserve]
+    public class XUiC_DevMenuEntityList : XUiC_List<DevMenuEntityEntry>
+    {
+        public override void RebuildList(bool _resetFilter = false)
+        {
+            allEntries.Clear();
+            foreach (DevMenuEntityEntry entry in DevMenuEntityCatalog.Entries)
+            {
+                if (!DevMenuEntityFilterState.FilterByCategory ||
+                    DevMenuEntityFilterState.IsCategorySelected(entry))
+                {
+                    allEntries.Add(entry);
+                }
+            }
+
+            allEntries.Sort();
+            base.RebuildList(_resetFilter);
+        }
+
+        public override void OnOpen()
+        {
+            RebuildList(_resetFilter: true);
+            base.OnOpen();
+        }
+
+        [Preserve]
+        public class EntryController : XUiC_ListEntry
+        {
+            [XuiXmlBinding("name")]
+            public string BindingName()
+            {
+                return entryData?.DisplayName ?? "";
+            }
+
+            [XuiXmlBinding("entityname")]
+            public string BindingEntityName()
+            {
+                return entryData?.EntityName ?? "";
+            }
+
+            [XuiXmlBinding("category")]
+            public string BindingCategory()
+            {
+                return entryData?.Category ?? "";
+            }
+
+            [XuiXmlBinding("entitytype")]
+            public string BindingEntityType()
+            {
+                return entryData?.EntityType ?? "";
+            }
+
+            [XuiXmlBinding("tags")]
+            public string BindingTags()
+            {
+                return entryData?.Tags ?? "";
+            }
+        }
+    }
+
+    [Preserve]
     public class XUiC_DevMenuCheatList : XUiC_List<DevMenuCheatEntry>
     {
         public override void RebuildList(bool _resetFilter = false)

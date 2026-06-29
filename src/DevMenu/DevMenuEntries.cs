@@ -100,6 +100,108 @@ namespace DevMenu
         }
     }
 
+    public sealed class DevMenuEntityCategoryEntry : XUiListEntry<DevMenuEntityCategoryEntry>
+    {
+        public DevMenuEntityCategoryEntry(string category, int sortOrder, int count)
+        {
+            Category = category ?? DevMenuEntityFilterState.AllCategory;
+            SortOrder = sortOrder;
+            Count = count;
+        }
+
+        public string Category { get; }
+
+        public int SortOrder { get; }
+
+        public int Count { get; }
+
+        public override bool MatchesSearch(string search)
+        {
+            if (string.IsNullOrEmpty(search))
+            {
+                return true;
+            }
+
+            return Category.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        public override int CompareTo(DevMenuEntityCategoryEntry other)
+        {
+            int sortCompare = SortOrder.CompareTo(other?.SortOrder ?? int.MaxValue);
+            return sortCompare != 0
+                ? sortCompare
+                : string.Compare(Category, other?.Category, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    public sealed class DevMenuEntityEntry : XUiListEntry<DevMenuEntityEntry>
+    {
+        public DevMenuEntityEntry(int entityClassId, string entityName, string displayName, string category, int categorySort, string entityType, string tags)
+        {
+            EntityClassId = entityClassId;
+            EntityName = entityName ?? "";
+            DisplayName = displayName ?? EntityName;
+            Category = category ?? "";
+            CategorySort = categorySort;
+            EntityType = entityType ?? "";
+            Tags = tags ?? "";
+        }
+
+        public int EntityClassId { get; }
+
+        public string EntityName { get; }
+
+        public string DisplayName { get; }
+
+        public string Category { get; }
+
+        public int CategorySort { get; }
+
+        public string EntityType { get; }
+
+        public string Tags { get; }
+
+        public override bool MatchesSearch(string search)
+        {
+            if (string.IsNullOrEmpty(search))
+            {
+                return true;
+            }
+
+            return IndexOf(DisplayName, search) ||
+                IndexOf(EntityName, search) ||
+                IndexOf(Category, search) ||
+                IndexOf(EntityType, search) ||
+                IndexOf(Tags, search);
+        }
+
+        public override int CompareTo(DevMenuEntityEntry other)
+        {
+            int categoryCompare = CategorySort.CompareTo(other?.CategorySort ?? int.MaxValue);
+            if (categoryCompare != 0)
+            {
+                return categoryCompare;
+            }
+
+            categoryCompare = string.Compare(Category, other?.Category, StringComparison.OrdinalIgnoreCase);
+            if (categoryCompare != 0)
+            {
+                return categoryCompare;
+            }
+
+            int nameCompare = string.Compare(DisplayName, other?.DisplayName, StringComparison.OrdinalIgnoreCase);
+            return nameCompare != 0
+                ? nameCompare
+                : string.Compare(EntityName, other?.EntityName, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IndexOf(string value, string search)
+        {
+            return !string.IsNullOrEmpty(value) &&
+                value.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+    }
+
     public sealed class DevMenuCheatEntry : XUiListEntry<DevMenuCheatEntry>
     {
         public DevMenuCheatEntry(string key, string displayName, string description, int sortOrder = 1000)

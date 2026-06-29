@@ -179,6 +179,265 @@ namespace DevMenu
     }
 
     [Preserve]
+    public static class DevMenuEntitySpawnService
+    {
+        private const float SpawnDistance = 3.5f;
+        private const float SpawnRayDistance = 80f;
+        private const int MaxSpawnCount = 25;
+
+        public static bool RequestSpawnInFrontOfPrimaryPlayer(string entityName, int count, out string message)
+        {
+            message = null;
+
+            if (GameManager.IsDedicatedServer)
+            {
+                message = "No local player exists on a dedicated server. Use 'devmenu entity <entityName> <x> <y> <z> [count] [yaw]'.";
+                return false;
+            }
+
+            World world = GameManager.Instance?.World;
+            EntityPlayerLocal player = world?.GetPrimaryPlayer();
+            if (world == null || player == null)
+            {
+                message = "No local player is available.";
+                return false;
+            }
+
+            if (!TryGetEntityEntry(entityName, out DevMenuEntityEntry entry, out message))
+            {
+                return false;
+            }
+
+            Vector3 spawnPosition = GetClientSpawnPosition(player, world);
+            Vector3 spawnRotation = GetSpawnRotation(player);
+
+            if (SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer)
+            {
+                return TrySpawnAt(entry.EntityName, spawnPosition, spawnRotation, count, player, out message);
+            }
+
+            SendServerSpawnCommand(entry.EntityName, spawnPosition, spawnRotation, count);
+            message = "Requested " + FormatCount(count) + " " + entry.EntityName + " spawn(s).";
+            return true;
+        }
+
+        public static bool TrySpawnInFrontOfPlayer(EntityAlive player, string entityName, int count, out string message)
+        {
+            message = null;
+
+            if (player == null)
+            {
+                message = "No target player is available. Use 'devmenu entity <entityName> <x> <y> <z> [count] [yaw]' from the server console.";
+                return false;
+            }
+
+            Vector3 spawnPosition = GetSpawnPositionInFront(player);
+            Vector3 spawnRotation = GetSpawnRotation(player);
+            return TrySpawnAt(entityName, spawnPosition, spawnRotation, count, player, out message);
+        }
+
+        public static bool TrySpawnAt(string entityName, Vector3 spawnPosition, Vector3 spawnRotation, int count, EntityAlive spawnedBy, out string message)
+        {
+            message = null;
+
+            World world = GameManager.Instance?.World;
+            if (world == null)
+            {
+                message = "No world is loaded.";
+                return false;
+            }
+
+            if (!TryGetEntityEntry(entityName, out DevMenuEntityEntry entry, out message))
+            {
+                return false;
+            }
+
+            int spawnCount = FormatCount(count);
+            int spawned = 0;
+
+            for (int i = 0; i < spawnCount; i++)
+            {
+                Vector3 position = spawnPosition + GetSpawnOffset(i);
+                Entity entity;
+                try
+                {
+                    entity = EntityFactory.CreateEntity(entry.EntityClassId, position, spawnRotation);
+                }
+                catch (Exception ex)
+                {
+                    message = "Failed to create " + entry.EntityName + ": " + ex.Message;
+                    return spawned > 0;
+                }
+
+                if (entity == null)
+                {
+                    message = "EntityFactory returned null for " + entry.EntityName + ".";
+                    return spawned > 0;
+                }
+
+                entity.SetSpawnerSource(EnumSpawnerSource.StaticSpawner);
+                world.SpawnEntityInWorld(entity);
+                spawned++;
+            }
+
+            message = "Spawned " + spawned + " " + entry.EntityName + " at " + FormatPosition(spawnPosition) + ".";
+            return spawned > 0;
+        }
+
+        private static bool TryGetEntityEntry(string entityName, out DevMenuEntityEntry entry, out string message)
+        {
+            entry = null;
+            message = null;
+
+            if (string.IsNullOrEmpty(entityName))
+            {
+                message = "No entity name was provided.";
+                return false;
+            }
+
+            if (DevMenuEntityCatalog.IsKnownEntity(entityName, out entry))
+            {
+                return true;
+            }
+
+            message = "Unknown entity: " + entityName;
+            return false;
+        }
+
+        private static Vector3 GetClientSpawnPosition(EntityPlayerLocal player, World world)
+        {
+            try
+            {
+                Ray ray = player.GetLookRay();
+                if (Voxel.Raycast(world, ray, SpawnRayDistance, bHitTransparentBlocks: true, bHitNotCollidableBlocks: false))
+                {
+                    WorldRayHitInfo hitInfo = Voxel.voxelRayHitInfo;
+                    if (hitInfo != null && hitInfo.bHitValid)
+                    {
+                        Vector3 normal = GetBlockFaceNormal(hitInfo.hit.blockFace);
+                        Vector3 position = hitInfo.hit.pos + normal * 1.2f;
+                        return normal.y > 0.5f ? position : position + Vector3.up * 0.1f;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+            }
+
+            return GetSpawnPositionInFront(player);
+        }
+
+        private static Vector3 GetSpawnPositionInFront(EntityAlive player)
+        {
+            Vector3 forward = GetFlatForward(player);
+            return player.position + forward * SpawnDistance + Vector3.up * 0.1f;
+        }
+
+        private static Vector3 GetFlatForward(EntityAlive player)
+        {
+            Vector3 forward = player.GetLookVector();
+            forward.y = 0f;
+            return forward.sqrMagnitude < 0.001f ? Vector3.forward : forward.normalized;
+        }
+
+        private static Vector3 GetSpawnRotation(EntityAlive player)
+        {
+            return new Vector3(0f, player.rotation.y + 180f, 0f);
+        }
+
+        private static Vector3 GetSpawnOffset(int index)
+        {
+            if (index <= 0)
+            {
+                return Vector3.zero;
+            }
+
+            int ring = ((index - 1) / 8) + 1;
+            int side = (index - 1) % 8;
+            const float spacing = 1.35f;
+
+            switch (side)
+            {
+                case 0:
+                    return new Vector3(spacing * ring, 0f, 0f);
+                case 1:
+                    return new Vector3(-spacing * ring, 0f, 0f);
+                case 2:
+                    return new Vector3(0f, 0f, spacing * ring);
+                case 3:
+                    return new Vector3(0f, 0f, -spacing * ring);
+                case 4:
+                    return new Vector3(spacing * ring, 0f, spacing * ring);
+                case 5:
+                    return new Vector3(-spacing * ring, 0f, spacing * ring);
+                case 6:
+                    return new Vector3(spacing * ring, 0f, -spacing * ring);
+                default:
+                    return new Vector3(-spacing * ring, 0f, -spacing * ring);
+            }
+        }
+
+        private static Vector3 GetBlockFaceNormal(BlockFace blockFace)
+        {
+            switch (blockFace)
+            {
+                case BlockFace.Top:
+                    return Vector3.up;
+                case BlockFace.Bottom:
+                    return Vector3.down;
+                case BlockFace.North:
+                    return Vector3.back;
+                case BlockFace.South:
+                    return Vector3.forward;
+                case BlockFace.East:
+                    return Vector3.right;
+                case BlockFace.West:
+                    return Vector3.left;
+                default:
+                    return Vector3.up;
+            }
+        }
+
+        private static int FormatCount(int count)
+        {
+            if (count < 1)
+            {
+                return 1;
+            }
+
+            return count > MaxSpawnCount ? MaxSpawnCount : count;
+        }
+
+        private static void SendServerSpawnCommand(string entityName, Vector3 spawnPosition, Vector3 spawnRotation, int count)
+        {
+            string command = "devmenu entity " + Quote(entityName) + " " +
+                FormatFloat(spawnPosition.x) + " " +
+                FormatFloat(spawnPosition.y) + " " +
+                FormatFloat(spawnPosition.z) + " " +
+                FormatCount(count) + " " +
+                FormatFloat(spawnRotation.y);
+
+            SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(
+                NetPackageManager.GetPackage<NetPackageConsoleCmdServer>().Setup(command));
+        }
+
+        private static string Quote(string value)
+        {
+            return "\"" + value.Replace("\"", "\\\"") + "\"";
+        }
+
+        private static string FormatFloat(float value)
+        {
+            return value.ToString("R", CultureInfo.InvariantCulture);
+        }
+
+        private static string FormatPosition(Vector3 position)
+        {
+            return FormatFloat(position.x) + "," + FormatFloat(position.y) + "," + FormatFloat(position.z);
+        }
+    }
+
+    [Preserve]
     public static class DevMenuCheatService
     {
         private const string InfiniteAmmoBuff = "devMenuInfiniteAmmo";
