@@ -66,6 +66,39 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           output_path: CHANGELOG.md
 
+      - name: Prepare Nexus Mods metadata
+        id: nexus_metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          nexus_version="${{ inputs.version_tag }}"
+          nexus_version="${nexus_version#v}"
+
+          delimiter="NEXUS_DESCRIPTION_$(date +%s%N)"
+          {
+            echo "version=${nexus_version}"
+            echo "description<<${delimiter}"
+            if [[ -f CHANGELOG.md ]]; then
+              cat CHANGELOG.md
+            else
+              echo "Release ${{ inputs.version_tag }}"
+            fi
+            echo "${delimiter}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Validate Nexus Mods API key
+        shell: bash
+        env:
+          NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${NEXUSMODS_API_KEY// }" ]]; then
+            echo "Missing NEXUSMODS_API_KEY repository secret."
+            exit 1
+          fi
+
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v3
         with:
@@ -74,3 +107,14 @@ jobs:
           body_path: CHANGELOG.md
           files: ${{ env.ZIP_PATH }}
           fail_on_unmatched_files: true
+
+      - name: Upload release to Nexus Mods
+        uses: Nexus-Mods/upload-action@v1.0.0-beta.8
+        with:
+          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+          file_id: '7586738'
+          filename: ${{ env.ZIP_PATH }}
+          version: ${{ steps.nexus_metadata.outputs.version }}
+          display_name: Dev Menu ${{ inputs.version_tag }}
+          description: ${{ steps.nexus_metadata.outputs.description }}
+          category: main
