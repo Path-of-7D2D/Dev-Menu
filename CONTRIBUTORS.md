@@ -86,16 +86,20 @@ hotkey. `PlayerActionsLocal` is created before mods load, so the hotkey code
 must update the already-running input set as well as patch future constructors.
 
 The main UI is defined in `Config/XUi_InGame/windows.xml` and controlled by
-`XUiC_DevMenuWindow`. It uses V3 `TabSelector` elements with three tab
+`XUiC_DevMenuWindow`. It uses V3 `TabSelector` elements with these tab
 controllers:
 
 - `DevMenuItemCategoryList` and `DevMenuItemList`
+- `DevMenuEntityCategoryList` and `DevMenuEntityList`
+- `DevMenuBuffCategoryList` and `DevMenuBuffList`
 - `DevMenuCheatList`
 - `LootableTileEntityList`
 
 Catalogs are built from live game definitions at runtime:
 
 - Items come from the loaded `ItemClass` catalog.
+- Entities come from the loaded `EntityClass` catalog.
+- Buffs/debuffs come from the loaded `BuffManager.Buffs` catalog.
 - Tile entities come from lootable composite blocks that use
   `TEFeatureStorage` and a `LootList`.
 - Cheats are defined in code in `DevMenuCheatCatalog`.
@@ -122,6 +126,11 @@ into `1A-DevMenu/Config` and the live game install.
 
 Item spawning supports Q1-Q6 quality selection. The quality is applied only when
 the target item supports quality.
+
+Buff/debuff testing supports fixed duration presets. The UI routes add/remove
+through `DevMenuBuffService`, which uses `EntityBuffs.AddBuff` with explicit
+seconds and removes an active matching buff before re-adding it so the selected
+duration is reapplied.
 
 Tile entity spawning places lootable blocks with no owner and resets them to
 untouched state so game loot is generated when opened.

@@ -191,6 +191,112 @@ namespace DevMenu
     }
 
     [Preserve]
+    public class XUiC_DevMenuBuffCategoryList : XUiC_List<DevMenuBuffCategoryEntry>
+    {
+        public override void RebuildList(bool _resetFilter = false)
+        {
+            allEntries.Clear();
+            allEntries.AddRange(DevMenuBuffCatalog.Categories);
+            allEntries.Sort();
+            base.RebuildList(_resetFilter);
+        }
+
+        public override void OnOpen()
+        {
+            RebuildList(_resetFilter: true);
+            base.OnOpen();
+        }
+
+        [Preserve]
+        public class EntryController : XUiC_ListEntry
+        {
+            [XuiXmlBinding("name")]
+            public string BindingName()
+            {
+                return entryData?.Category ?? "";
+            }
+
+            [XuiXmlBinding("count")]
+            public string BindingCount()
+            {
+                return entryData == null ? "" : entryData.Count.ToString();
+            }
+        }
+    }
+
+    [Preserve]
+    public class XUiC_DevMenuBuffList : XUiC_List<DevMenuBuffEntry>
+    {
+        public override void RebuildList(bool _resetFilter = false)
+        {
+            allEntries.Clear();
+            foreach (DevMenuBuffEntry entry in DevMenuBuffCatalog.Entries)
+            {
+                if (!DevMenuBuffFilterState.FilterByCategory ||
+                    DevMenuBuffFilterState.IsCategorySelected(entry))
+                {
+                    allEntries.Add(entry);
+                }
+            }
+
+            allEntries.Sort();
+            base.RebuildList(_resetFilter);
+        }
+
+        public override void OnOpen()
+        {
+            RebuildList(_resetFilter: true);
+            base.OnOpen();
+        }
+
+        [Preserve]
+        public class EntryController : XUiC_ListEntry
+        {
+            [XuiXmlBinding("name")]
+            public string BindingName()
+            {
+                return entryData?.DisplayName ?? "";
+            }
+
+            [XuiXmlBinding("buffname")]
+            public string BindingBuffName()
+            {
+                return entryData?.BuffName ?? "";
+            }
+
+            [XuiXmlBinding("category")]
+            public string BindingCategory()
+            {
+                return entryData?.Category ?? "";
+            }
+
+            [XuiXmlBinding("description")]
+            public string BindingDescription()
+            {
+                return entryData?.Description ?? "";
+            }
+
+            [XuiXmlBinding("duration")]
+            public string BindingDuration()
+            {
+                return entryData?.Duration ?? "";
+            }
+
+            [XuiXmlBinding("flags")]
+            public string BindingFlags()
+            {
+                return entryData?.Flags ?? "";
+            }
+
+            [XuiXmlBinding("status")]
+            public string BindingStatus()
+            {
+                return entryData == null ? "" : DevMenuBuffService.GetStatus(entryData.BuffName);
+            }
+        }
+    }
+
+    [Preserve]
     public class XUiC_DevMenuCheatList : XUiC_List<DevMenuCheatEntry>
     {
         public override void RebuildList(bool _resetFilter = false)

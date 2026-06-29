@@ -252,6 +252,13 @@ namespace DevMenu
                 return false;
             }
 
+            int entityClassId = GetEntityClassId(entry.EntityName);
+            if (entityClassId <= 0)
+            {
+                message = entry.EntityName + " does not resolve to a spawnable entity class.";
+                return false;
+            }
+
             int spawnCount = FormatCount(count);
             int spawned = 0;
 
@@ -261,7 +268,7 @@ namespace DevMenu
                 Entity entity;
                 try
                 {
-                    entity = EntityFactory.CreateEntity(entry.EntityClassId, position, spawnRotation);
+                    entity = EntityFactory.CreateEntity(entityClassId, position, spawnRotation);
                 }
                 catch (Exception ex)
                 {
@@ -302,6 +309,23 @@ namespace DevMenu
 
             message = "Unknown entity: " + entityName;
             return false;
+        }
+
+        private static int GetEntityClassId(string entityName)
+        {
+            if (string.IsNullOrEmpty(entityName))
+            {
+                return 0;
+            }
+
+            try
+            {
+                return EntityClass.GetId(entityName);
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
         }
 
         private static Vector3 GetClientSpawnPosition(EntityPlayerLocal player, World world)
@@ -434,6 +458,226 @@ namespace DevMenu
         private static string FormatPosition(Vector3 position)
         {
             return FormatFloat(position.x) + "," + FormatFloat(position.y) + "," + FormatFloat(position.z);
+        }
+    }
+
+    [Preserve]
+    public static class DevMenuBuffService
+    {
+        public static bool RequestAddToPrimaryPlayer(string buffName, float durationSeconds, out string message)
+        {
+            message = null;
+
+            if (GameManager.IsDedicatedServer)
+            {
+                message = "No local player exists on a dedicated server. Use 'devmenu buff add <buffName> [durationSeconds]' from a client or with a player sender.";
+                return false;
+            }
+
+            EntityPlayerLocal player = GameManager.Instance?.World?.GetPrimaryPlayer();
+            if (player == null)
+            {
+                message = "No local player is available.";
+                return false;
+            }
+
+            if (!TryGetBuffEntry(buffName, out DevMenuBuffEntry entry, out message))
+            {
+                return false;
+            }
+
+            if (SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer)
+            {
+                return TryAddToPlayer(player, entry.BuffName, durationSeconds, out message);
+            }
+
+            SendServerBuffCommand("add", entry.BuffName, durationSeconds);
+            message = "Requested " + entry.BuffName + " for " + FormatDuration(durationSeconds) + ".";
+            return true;
+        }
+
+        public static bool RequestRemoveFromPrimaryPlayer(string buffName, out string message)
+        {
+            message = null;
+
+            if (GameManager.IsDedicatedServer)
+            {
+                message = "No local player exists on a dedicated server. Use 'devmenu buff remove <buffName>' from a client or with a player sender.";
+                return false;
+            }
+
+            EntityPlayerLocal player = GameManager.Instance?.World?.GetPrimaryPlayer();
+            if (player == null)
+            {
+                message = "No local player is available.";
+                return false;
+            }
+
+            if (!TryGetBuffEntry(buffName, out DevMenuBuffEntry entry, out message))
+            {
+                return false;
+            }
+
+            if (SingletonMonoBehaviour<ConnectionManager>.Instance.IsServer)
+            {
+                return TryRemoveFromPlayer(player, entry.BuffName, out message);
+            }
+
+            SendServerBuffCommand("remove", entry.BuffName, 0f);
+            message = "Requested removal of " + entry.BuffName + ".";
+            return true;
+        }
+
+        public static bool TryAddToPlayer(EntityAlive player, string buffName, float durationSeconds, out string message)
+        {
+            message = null;
+
+            if (player == null)
+            {
+                message = "No target player is available.";
+                return false;
+            }
+
+            if (player.Buffs == null)
+            {
+                message = "The player buff container is not available.";
+                return false;
+            }
+
+            if (!TryGetBuffEntry(buffName, out DevMenuBuffEntry entry, out message))
+            {
+                return false;
+            }
+
+            if (player.Buffs.HasBuff(entry.BuffName))
+            {
+                player.Buffs.RemoveBuff(entry.BuffName);
+            }
+
+            EntityBuffs.BuffStatus status = player.Buffs.AddBuff(entry.BuffName, -1, true, false, ClampDuration(durationSeconds));
+            message = "Added " + entry.BuffName + " for " + FormatDuration(durationSeconds) + " (" + status + ").";
+            return true;
+        }
+
+        public static bool TryRemoveFromPlayer(EntityAlive player, string buffName, out string message)
+        {
+            message = null;
+
+            if (player == null)
+            {
+                message = "No target player is available.";
+                return false;
+            }
+
+            if (player.Buffs == null)
+            {
+                message = "The player buff container is not available.";
+                return false;
+            }
+
+            if (!TryGetBuffEntry(buffName, out DevMenuBuffEntry entry, out message))
+            {
+                return false;
+            }
+
+            if (!player.Buffs.HasBuff(entry.BuffName))
+            {
+                message = entry.BuffName + " is not active.";
+                return true;
+            }
+
+            player.Buffs.RemoveBuff(entry.BuffName);
+            message = "Removed " + entry.BuffName + ".";
+            return true;
+        }
+
+        public static string GetStatus(string buffName)
+        {
+            EntityAlive player = GameManager.Instance?.World?.GetPrimaryPlayer();
+            if (player == null || player.Buffs == null)
+            {
+                return "Unavailable";
+            }
+
+            try
+            {
+                BuffValue buffValue = player.Buffs.GetBuff(buffName);
+                if (buffValue == null)
+                {
+                    return "Inactive";
+                }
+
+                if (buffValue.Remove)
+                {
+                    return "Removing";
+                }
+
+                float duration = buffValue.DurationInSeconds;
+                return duration > 0f
+                    ? "Active " + DevMenuBuffCatalog.FormatDuration(duration)
+                    : "Active";
+            }
+            catch (Exception)
+            {
+                return player.Buffs.HasBuff(buffName) ? "Active" : "Inactive";
+            }
+        }
+
+        private static bool TryGetBuffEntry(string buffName, out DevMenuBuffEntry entry, out string message)
+        {
+            entry = null;
+            message = null;
+
+            if (string.IsNullOrEmpty(buffName))
+            {
+                message = "No buff name was provided.";
+                return false;
+            }
+
+            if (DevMenuBuffCatalog.IsKnownBuff(buffName, out entry))
+            {
+                return true;
+            }
+
+            message = "Unknown buff: " + buffName;
+            return false;
+        }
+
+        private static float ClampDuration(float durationSeconds)
+        {
+            if (durationSeconds < 1f)
+            {
+                return 1f;
+            }
+
+            return durationSeconds > 86400f ? 86400f : durationSeconds;
+        }
+
+        private static string FormatDuration(float durationSeconds)
+        {
+            return DevMenuBuffCatalog.FormatDuration(ClampDuration(durationSeconds));
+        }
+
+        private static void SendServerBuffCommand(string action, string buffName, float durationSeconds)
+        {
+            string command = "devmenu buff " + Quote(action) + " " + Quote(buffName);
+            if (action.Equals("add", StringComparison.OrdinalIgnoreCase))
+            {
+                command += " " + FormatFloat(ClampDuration(durationSeconds));
+            }
+
+            SingletonMonoBehaviour<ConnectionManager>.Instance.SendToServer(
+                NetPackageManager.GetPackage<NetPackageConsoleCmdServer>().Setup(command));
+        }
+
+        private static string Quote(string value)
+        {
+            return "\"" + value.Replace("\"", "\\\"") + "\"";
+        }
+
+        private static string FormatFloat(float value)
+        {
+            return value.ToString("R", CultureInfo.InvariantCulture);
         }
     }
 

@@ -11,21 +11,28 @@ namespace DevMenu
         private XUiC_DevMenuItemList itemList;
         private XUiC_DevMenuEntityCategoryList entityCategoryList;
         private XUiC_DevMenuEntityList entityList;
+        private XUiC_DevMenuBuffCategoryList buffCategoryList;
+        private XUiC_DevMenuBuffList buffList;
         private XUiC_DevMenuCheatList cheatList;
         private XUiC_LootableTileEntityList tileEntityList;
 
         private XUiC_ToggleButton categoryFilterToggle;
         private XUiC_ToggleButton entityCategoryFilterToggle;
+        private XUiC_ToggleButton buffCategoryFilterToggle;
         private XUiC_SimpleButton spawnItemOneButton;
         private XUiC_SimpleButton spawnItemTenButton;
         private XUiC_SimpleButton spawnEntityOneButton;
         private XUiC_SimpleButton spawnEntityFiveButton;
+        private XUiC_SimpleButton addBuffButton;
+        private XUiC_SimpleButton removeBuffButton;
         private XUiC_SimpleButton toggleCheatButton;
         private XUiC_SimpleButton spawnTileEntityButton;
         private XUiC_SimpleButton reloadButton;
         private XUiC_SimpleButton closeButton;
         private readonly XUiC_SimpleButton[] qualityButtons = new XUiC_SimpleButton[6];
+        private readonly XUiC_SimpleButton[] buffDurationButtons = new XUiC_SimpleButton[5];
         private int selectedItemQuality = 6;
+        private float selectedBuffDurationSeconds = 60f;
 
         public override void Init()
         {
@@ -69,6 +76,25 @@ namespace DevMenu
                 entityCategoryFilterToggle.OnValueChanged += EntityCategoryFilterToggle_OnValueChanged;
             }
 
+            buffCategoryList = GetChildById("buffCategories") as XUiC_DevMenuBuffCategoryList;
+            if (buffCategoryList != null)
+            {
+                buffCategoryList.ListEntryClicked += BuffCategoryList_ListEntryClicked;
+            }
+
+            buffList = GetChildById("buffs") as XUiC_DevMenuBuffList;
+            if (buffList != null)
+            {
+                buffList.ListEntryDoubleClicked += BuffList_ListEntryDoubleClicked;
+            }
+
+            buffCategoryFilterToggle = GetToggleButton("toggleBuffCategoryFilter");
+            if (buffCategoryFilterToggle != null)
+            {
+                buffCategoryFilterToggle.Value = DevMenuBuffFilterState.FilterByCategory;
+                buffCategoryFilterToggle.OnValueChanged += BuffCategoryFilterToggle_OnValueChanged;
+            }
+
             cheatList = GetChildById("cheats") as XUiC_DevMenuCheatList;
             if (cheatList != null)
             {
@@ -105,6 +131,18 @@ namespace DevMenu
                 spawnEntityFiveButton.OnPressed += SpawnEntityFiveButton_OnPressed;
             }
 
+            addBuffButton = GetSimpleButton("btnAddBuff");
+            if (addBuffButton != null)
+            {
+                addBuffButton.OnPressed += AddBuffButton_OnPressed;
+            }
+
+            removeBuffButton = GetSimpleButton("btnRemoveBuff");
+            if (removeBuffButton != null)
+            {
+                removeBuffButton.OnPressed += RemoveBuffButton_OnPressed;
+            }
+
             WireQualityButton("btnQuality1", 1);
             WireQualityButton("btnQuality2", 2);
             WireQualityButton("btnQuality3", 3);
@@ -112,6 +150,13 @@ namespace DevMenu
             WireQualityButton("btnQuality5", 5);
             WireQualityButton("btnQuality6", 6);
             UpdateQualityButtonSelection();
+
+            WireBuffDurationButton("btnBuffDuration30s", 0, 30f);
+            WireBuffDurationButton("btnBuffDuration1m", 1, 60f);
+            WireBuffDurationButton("btnBuffDuration5m", 2, 300f);
+            WireBuffDurationButton("btnBuffDuration10m", 3, 600f);
+            WireBuffDurationButton("btnBuffDuration60m", 4, 3600f);
+            UpdateBuffDurationButtonSelection();
 
             toggleCheatButton = GetSimpleButton("btnToggleCheat");
             if (toggleCheatButton != null)
@@ -160,6 +205,16 @@ namespace DevMenu
             }
         }
 
+        private void WireBuffDurationButton(string id, int index, float durationSeconds)
+        {
+            XUiC_SimpleButton button = GetSimpleButton(id);
+            if (button != null)
+            {
+                buffDurationButtons[index] = button;
+                button.OnPressed += (sender, mouseButton) => SetBuffDuration(durationSeconds);
+            }
+        }
+
         [XuiXmlBinding("selectedquality")]
         public string BindingSelectedQuality()
         {
@@ -176,6 +231,18 @@ namespace DevMenu
         public string BindingSelectedEntityCategory()
         {
             return "Category: " + DevMenuEntityFilterState.SelectedCategory;
+        }
+
+        [XuiXmlBinding("selectedbuffcategory")]
+        public string BindingSelectedBuffCategory()
+        {
+            return "Category: " + DevMenuBuffFilterState.SelectedCategory;
+        }
+
+        [XuiXmlBinding("selectedbuffduration")]
+        public string BindingSelectedBuffDuration()
+        {
+            return "Duration: " + DevMenuBuffCatalog.FormatDuration(selectedBuffDurationSeconds);
         }
 
         private void SpawnItemOneButton_OnPressed(XUiController sender, int mouseButton)
@@ -198,6 +265,16 @@ namespace DevMenu
             SpawnSelectedEntity(5);
         }
 
+        private void AddBuffButton_OnPressed(XUiController sender, int mouseButton)
+        {
+            AddSelectedBuff();
+        }
+
+        private void RemoveBuffButton_OnPressed(XUiController sender, int mouseButton)
+        {
+            RemoveSelectedBuff();
+        }
+
         private void ToggleCheatButton_OnPressed(XUiController sender, int mouseButton)
         {
             ToggleSelectedCheat();
@@ -214,6 +291,13 @@ namespace DevMenu
         {
             DevMenuEntityFilterState.FilterByCategory = newValue;
             entityList?.RebuildList(_resetFilter: false);
+            RefreshBindingsSelfAndChildren();
+        }
+
+        private void BuffCategoryFilterToggle_OnValueChanged(XUiC_ToggleButton sender, bool newValue)
+        {
+            DevMenuBuffFilterState.FilterByCategory = newValue;
+            buffList?.RebuildList(_resetFilter: false);
             RefreshBindingsSelfAndChildren();
         }
 
@@ -255,12 +339,39 @@ namespace DevMenu
             RefreshBindingsSelfAndChildren();
         }
 
+        private void BuffCategoryList_ListEntryClicked(XUiC_List<DevMenuBuffCategoryEntry> list, DevMenuBuffCategoryEntry entry)
+        {
+            if (entry == null)
+            {
+                return;
+            }
+
+            DevMenuBuffFilterState.SelectedCategory = entry.Category;
+            DevMenuBuffFilterState.FilterByCategory = true;
+
+            if (buffCategoryFilterToggle != null && !buffCategoryFilterToggle.Value)
+            {
+                buffCategoryFilterToggle.Value = true;
+            }
+
+            buffList?.RebuildList(_resetFilter: false);
+            RefreshBindingsSelfAndChildren();
+        }
+
         private void SetItemQuality(int quality)
         {
             selectedItemQuality = quality < 1 ? 1 : (quality > 6 ? 6 : quality);
             UpdateQualityButtonSelection();
             RefreshBindingsSelfAndChildren();
             Output("Item spawn tier set to Q" + selectedItemQuality + ".");
+        }
+
+        private void SetBuffDuration(float durationSeconds)
+        {
+            selectedBuffDurationSeconds = durationSeconds < 1f ? 1f : durationSeconds;
+            UpdateBuffDurationButtonSelection();
+            RefreshBindingsSelfAndChildren();
+            Output("Buff duration set to " + DevMenuBuffCatalog.FormatDuration(selectedBuffDurationSeconds) + ".");
         }
 
         private void UpdateQualityButtonSelection()
@@ -275,6 +386,19 @@ namespace DevMenu
             }
         }
 
+        private void UpdateBuffDurationButtonSelection()
+        {
+            float[] durations = { 30f, 60f, 300f, 600f, 3600f };
+            for (int i = 0; i < buffDurationButtons.Length; i++)
+            {
+                XUiC_SimpleButton button = buffDurationButtons[i];
+                if (button?.Button != null)
+                {
+                    button.Button.Selected = durations[i] == selectedBuffDurationSeconds;
+                }
+            }
+        }
+
         private void SpawnTileEntityButton_OnPressed(XUiController sender, int mouseButton)
         {
             SpawnSelectedTileEntity();
@@ -284,16 +408,19 @@ namespace DevMenu
         {
             DevMenuItemCatalog.Reload();
             DevMenuEntityCatalog.Reload();
+            DevMenuBuffCatalog.Reload();
             LootableTileEntityCatalog.Reload();
 
             categoryList?.RebuildList(_resetFilter: false);
             itemList?.RebuildList(_resetFilter: false);
             entityCategoryList?.RebuildList(_resetFilter: false);
             entityList?.RebuildList(_resetFilter: false);
+            buffCategoryList?.RebuildList(_resetFilter: false);
+            buffList?.RebuildList(_resetFilter: false);
             tileEntityList?.RebuildList(_resetFilter: false);
             cheatList?.RebuildList(_resetFilter: false);
 
-            Output("Reloaded item, entity, and tile entity catalogs.");
+            Output("Reloaded item, entity, buff, and tile entity catalogs.");
         }
 
         private void CloseButton_OnPressed(XUiController sender, int mouseButton)
@@ -309,6 +436,11 @@ namespace DevMenu
         private void EntityList_ListEntryDoubleClicked(XUiC_List<DevMenuEntityEntry> list, DevMenuEntityEntry entry)
         {
             SpawnEntity(entry, 1);
+        }
+
+        private void BuffList_ListEntryDoubleClicked(XUiC_List<DevMenuBuffEntry> list, DevMenuBuffEntry entry)
+        {
+            AddBuff(entry);
         }
 
         private void CheatList_ListEntryDoubleClicked(XUiC_List<DevMenuCheatEntry> list, DevMenuCheatEntry entry)
@@ -355,6 +487,42 @@ namespace DevMenu
             }
 
             SpawnEntity(entry, count);
+        }
+
+        private void AddSelectedBuff()
+        {
+            if (buffList == null)
+            {
+                Output("Buff list is not available.");
+                return;
+            }
+
+            DevMenuBuffEntry entry = buffList.SelectedEntryData;
+            if (entry == null)
+            {
+                Output("Select a buff or debuff first.");
+                return;
+            }
+
+            AddBuff(entry);
+        }
+
+        private void RemoveSelectedBuff()
+        {
+            if (buffList == null)
+            {
+                Output("Buff list is not available.");
+                return;
+            }
+
+            DevMenuBuffEntry entry = buffList.SelectedEntryData;
+            if (entry == null)
+            {
+                Output("Select a buff or debuff first.");
+                return;
+            }
+
+            RemoveBuff(entry);
         }
 
         private void ToggleSelectedCheat()
@@ -413,6 +581,30 @@ namespace DevMenu
 
             DevMenuEntitySpawnService.RequestSpawnInFrontOfPrimaryPlayer(entry.EntityName, count, out string message);
             Output(message);
+        }
+
+        private void AddBuff(DevMenuBuffEntry entry)
+        {
+            if (entry == null)
+            {
+                return;
+            }
+
+            DevMenuBuffService.RequestAddToPrimaryPlayer(entry.BuffName, selectedBuffDurationSeconds, out string message);
+            Output(message);
+            buffList?.RebuildList(_resetFilter: false);
+        }
+
+        private void RemoveBuff(DevMenuBuffEntry entry)
+        {
+            if (entry == null)
+            {
+                return;
+            }
+
+            DevMenuBuffService.RequestRemoveFromPrimaryPlayer(entry.BuffName, out string message);
+            Output(message);
+            buffList?.RebuildList(_resetFilter: false);
         }
 
         private void ToggleCheat(DevMenuCheatEntry entry)

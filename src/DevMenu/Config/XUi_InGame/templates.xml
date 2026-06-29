@@ -7,8 +7,8 @@
 				<sprite depth="1" name="rowBackground" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.68" visible="{hasentry}" />
 				<sprite depth="2" name="selection" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[mediumGrey]" type="sliced" fillcenter="true" globalopacitymod="0.65" visible="{hovered}" />
 				<sprite depth="3" name="selected" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[white]" type="sliced" fillcenter="true" globalopacitymod="0.28" visible="{isselected}" />
-				<label depth="4" name="name" pos="8,-7" width="150" height="24" text="{name}" font_size="24" justify="left" pivot="top_left" />
-				<label depth="4" name="count" pos="162,-8" width="50" height="24" text="{count}" font_size="22" justify="right" pivot="top_left" color="[white]" />
+				<label depth="4" name="name" pos="8,-7" width="150" height="24" text="{name}" font_size="24" justify="left" pivot="topleft" />
+				<label depth="4" name="count" pos="162,-8" width="50" height="24" text="{count}" font_size="22" justify="right" pivot="topleft" color="[white]" />
 			</rect>
 		</dev_menu_item_category_entry>
 
@@ -17,21 +17,31 @@
 				<sprite depth="1" name="rowBackground" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.68" visible="{hasentry}" />
 				<sprite depth="2" name="selection" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[mediumGrey]" type="sliced" fillcenter="true" globalopacitymod="0.65" visible="{hovered}" />
 				<sprite depth="3" name="selected" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[white]" type="sliced" fillcenter="true" globalopacitymod="0.28" visible="{isselected}" />
-				<label depth="4" name="name" pos="8,-7" width="150" height="24" text="{name}" font_size="24" justify="left" pivot="top_left" />
-				<label depth="4" name="count" pos="162,-8" width="50" height="24" text="{count}" font_size="22" justify="right" pivot="top_left" color="[white]" />
+				<label depth="4" name="name" pos="8,-7" width="150" height="24" text="{name}" font_size="24" justify="left" pivot="topleft" />
+				<label depth="4" name="count" pos="162,-8" width="50" height="24" text="{count}" font_size="22" justify="right" pivot="topleft" color="[white]" />
 			</rect>
 		</dev_menu_entity_category_entry>
+
+		<dev_menu_buff_category_entry width="220" height="34">
+			<rect name="entry" width="${width}" height="${height}" controller="DevMenu.DevMenuBuffCategoryList+EntryController, DevMenu" style="press, hover, scroll" sound_play_on_hover="[default_hover]">
+				<sprite depth="1" name="rowBackground" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.68" visible="{hasentry}" />
+				<sprite depth="2" name="selection" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[mediumGrey]" type="sliced" fillcenter="true" globalopacitymod="0.65" visible="{hovered}" />
+				<sprite depth="3" name="selected" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[white]" type="sliced" fillcenter="true" globalopacitymod="0.28" visible="{isselected}" />
+				<label depth="4" name="name" pos="8,-7" width="150" height="24" text="{name}" font_size="24" justify="left" pivot="topleft" />
+				<label depth="4" name="count" pos="162,-8" width="50" height="24" text="{count}" font_size="22" justify="right" pivot="topleft" color="[white]" />
+			</rect>
+		</dev_menu_buff_category_entry>
 
 		<dev_menu_item_entry width="1080" height="34">
 			<rect name="entry" width="${width}" height="${height}" controller="DevMenu.DevMenuItemList+EntryController, DevMenu" style="press, hover, scroll" on_doubleclick="true" sound_play_on_hover="[default_hover]">
 				<sprite depth="1" name="rowBackground" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.68" visible="{hasentry}" />
 				<sprite depth="2" name="selection" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[mediumGrey]" type="sliced" fillcenter="true" globalopacitymod="0.65" visible="{hovered}" />
 				<sprite depth="3" name="selected" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[white]" type="sliced" fillcenter="true" globalopacitymod="0.28" visible="{isselected}" />
-				<label depth="4" name="category" pos="8,-8" width="110" height="24" text="{category}" font_size="22" justify="left" pivot="top_left" color="[white]" />
-				<label depth="4" name="name" pos="130,-7" width="245" height="24" text="{name}" font_size="24" justify="left" pivot="top_left" />
-				<label depth="4" name="itemName" pos="390,-8" width="245" height="24" text="{itemname}" font_size="22" justify="left" pivot="top_left" color="[white]" />
-				<label depth="4" name="tiered" pos="650,-8" width="50" height="24" text="{tiered}" font_size="22" justify="left" pivot="top_left" color="[white]" />
-				<label depth="4" name="tags" pos="712,-8" width="${width-720}" height="24" text="{tags}" font_size="20" justify="left" pivot="top_left" color="[lightGrey]" />
+				<label depth="4" name="category" pos="8,-8" width="110" height="24" text="{category}" font_size="22" justify="left" pivot="topleft" color="[white]" />
+				<label depth="4" name="name" pos="130,-7" width="245" height="24" text="{name}" font_size="24" justify="left" pivot="topleft" />
+				<label depth="4" name="itemName" pos="390,-8" width="245" height="24" text="{itemname}" font_size="22" justify="left" pivot="topleft" color="[white]" />
+				<label depth="4" name="tiered" pos="650,-8" width="50" height="24" text="{tiered}" font_size="22" justify="left" pivot="topleft" color="[white]" />
+				<label depth="4" name="tags" pos="712,-8" width="${width-720}" height="24" text="{tags}" font_size="20" justify="left" pivot="topleft" color="[lightGrey]" />
 			</rect>
 		</dev_menu_item_entry>
 
@@ -40,22 +50,36 @@
 				<sprite depth="1" name="rowBackground" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.68" visible="{hasentry}" />
 				<sprite depth="2" name="selection" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[mediumGrey]" type="sliced" fillcenter="true" globalopacitymod="0.65" visible="{hovered}" />
 				<sprite depth="3" name="selected" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[white]" type="sliced" fillcenter="true" globalopacitymod="0.28" visible="{isselected}" />
-				<label depth="4" name="category" pos="8,-8" width="130" height="24" text="{category}" font_size="22" justify="left" pivot="top_left" color="[white]" />
-				<label depth="4" name="name" pos="150,-7" width="255" height="24" text="{name}" font_size="24" justify="left" pivot="top_left" />
-				<label depth="4" name="entityName" pos="420,-8" width="240" height="24" text="{entityname}" font_size="22" justify="left" pivot="top_left" color="[white]" />
-				<label depth="4" name="entityType" pos="675,-8" width="90" height="24" text="{entitytype}" font_size="22" justify="left" pivot="top_left" color="[white]" />
-				<label depth="4" name="tags" pos="780,-8" width="${width-788}" height="24" text="{tags}" font_size="20" justify="left" pivot="top_left" color="[lightGrey]" />
+				<label depth="4" name="category" pos="8,-8" width="130" height="24" text="{category}" font_size="22" justify="left" pivot="topleft" color="[white]" />
+				<label depth="4" name="name" pos="150,-7" width="255" height="24" text="{name}" font_size="24" justify="left" pivot="topleft" />
+				<label depth="4" name="entityName" pos="420,-8" width="240" height="24" text="{entityname}" font_size="22" justify="left" pivot="topleft" color="[white]" />
+				<label depth="4" name="entityType" pos="675,-8" width="90" height="24" text="{entitytype}" font_size="22" justify="left" pivot="topleft" color="[white]" />
+				<label depth="4" name="tags" pos="780,-8" width="${width-788}" height="24" text="{tags}" font_size="20" justify="left" pivot="topleft" color="[lightGrey]" />
 			</rect>
 		</dev_menu_entity_entry>
+
+		<dev_menu_buff_entry width="1080" height="34">
+			<rect name="entry" width="${width}" height="${height}" controller="DevMenu.DevMenuBuffList+EntryController, DevMenu" style="press, hover, scroll" on_doubleclick="true" sound_play_on_hover="[default_hover]">
+				<sprite depth="1" name="rowBackground" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.68" visible="{hasentry}" />
+				<sprite depth="2" name="selection" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[mediumGrey]" type="sliced" fillcenter="true" globalopacitymod="0.65" visible="{hovered}" />
+				<sprite depth="3" name="selected" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[white]" type="sliced" fillcenter="true" globalopacitymod="0.28" visible="{isselected}" />
+				<label depth="4" name="name" pos="8,-7" width="240" height="24" text="{name}" font_size="24" justify="left" pivot="topleft" />
+				<label depth="4" name="buffName" pos="260,-8" width="220" height="24" text="{buffname}" font_size="22" justify="left" pivot="topleft" color="[white]" />
+				<label depth="4" name="duration" pos="492,-8" width="70" height="24" text="{duration}" font_size="22" justify="left" pivot="topleft" color="[white]" />
+				<label depth="4" name="status" pos="574,-8" width="140" height="24" text="{status}" font_size="22" justify="left" pivot="topleft" color="[white]" />
+				<label depth="4" name="flags" pos="726,-8" width="130" height="24" text="{flags}" font_size="20" justify="left" pivot="topleft" color="[lightGrey]" />
+				<label depth="4" name="description" pos="868,-8" width="${width-876}" height="24" text="{description}" font_size="20" justify="left" pivot="topleft" color="[lightGrey]" />
+			</rect>
+		</dev_menu_buff_entry>
 
 		<dev_menu_cheat_entry width="1080" height="42">
 			<rect name="entry" width="${width}" height="${height}" controller="DevMenu.DevMenuCheatList+EntryController, DevMenu" style="press, hover, scroll" on_doubleclick="true" sound_play_on_hover="[default_hover]">
 				<sprite depth="1" name="rowBackground" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.68" visible="{hasentry}" />
 				<sprite depth="2" name="selection" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[mediumGrey]" type="sliced" fillcenter="true" globalopacitymod="0.65" visible="{hovered}" />
 				<sprite depth="3" name="selected" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[white]" type="sliced" fillcenter="true" globalopacitymod="0.28" visible="{isselected}" />
-				<label depth="4" name="name" pos="8,-8" width="250" height="26" text="{name}" font_size="26" justify="left" pivot="top_left" />
-				<label depth="4" name="description" pos="280,-9" width="560" height="24" text="{description}" font_size="22" justify="left" pivot="top_left" color="[white]" />
-				<label depth="4" name="status" pos="860,-9" width="210" height="24" text="{status}" font_size="22" justify="right" pivot="top_left" color="[white]" />
+				<label depth="4" name="name" pos="8,-8" width="250" height="26" text="{name}" font_size="26" justify="left" pivot="topleft" />
+				<label depth="4" name="description" pos="280,-9" width="560" height="24" text="{description}" font_size="22" justify="left" pivot="topleft" color="[white]" />
+				<label depth="4" name="status" pos="860,-9" width="210" height="24" text="{status}" font_size="22" justify="right" pivot="topleft" color="[white]" />
 			</rect>
 		</dev_menu_cheat_entry>
 
@@ -64,10 +88,10 @@
 				<sprite depth="1" name="rowBackground" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[black]" type="sliced" fillcenter="true" globalopacitymod="0.68" visible="{hasentry}" />
 				<sprite depth="2" name="selection" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[mediumGrey]" type="sliced" fillcenter="true" globalopacitymod="0.65" visible="{hovered}" />
 				<sprite depth="3" name="selected" sprite="menu_empty3px" pos="0,0" width="${width}" height="${height}" color="[white]" type="sliced" fillcenter="true" globalopacitymod="0.28" visible="{isselected}" />
-				<label depth="4" name="name" pos="8,-7" width="350" height="24" text="{name}" font_size="24" justify="left" pivot="top_left" />
-				<label depth="4" name="blockName" pos="370,-8" width="350" height="24" text="{blockname}" font_size="22" justify="left" pivot="top_left" color="[white]" />
-				<label depth="4" name="lootList" pos="732,-8" width="230" height="24" text="{lootlist}" font_size="22" justify="left" pivot="top_left" color="[white]" />
-				<label depth="4" name="flags" pos="974,-8" width="98" height="24" text="{flags}" font_size="20" justify="left" pivot="top_left" color="[lightGrey]" />
+				<label depth="4" name="name" pos="8,-7" width="350" height="24" text="{name}" font_size="24" justify="left" pivot="topleft" />
+				<label depth="4" name="blockName" pos="370,-8" width="350" height="24" text="{blockname}" font_size="22" justify="left" pivot="topleft" color="[white]" />
+				<label depth="4" name="lootList" pos="732,-8" width="230" height="24" text="{lootlist}" font_size="22" justify="left" pivot="topleft" color="[white]" />
+				<label depth="4" name="flags" pos="974,-8" width="98" height="24" text="{flags}" font_size="20" justify="left" pivot="topleft" color="[lightGrey]" />
 			</rect>
 		</dev_menu_tile_entity_entry>
 	</append>

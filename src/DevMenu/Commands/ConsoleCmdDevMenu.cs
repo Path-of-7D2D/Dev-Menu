@@ -22,7 +22,7 @@ namespace DevMenu.Commands
 
         public override string getDescription()
         {
-            return "Opens the Dev Menu or runs Dev Menu item, entity, cheat, and tile entity actions.";
+            return "Opens the Dev Menu or runs Dev Menu item, entity, buff, cheat, and tile entity actions.";
         }
 
         public override string getHelp()
@@ -35,6 +35,9 @@ namespace DevMenu.Commands
                 "  devmenu entities [filter]\n" +
                 "  devmenu entity <entityName> [count]\n" +
                 "  devmenu entity <entityName> <x> <y> <z> [count] [yaw]\n" +
+                "  devmenu buffs [filter]\n" +
+                "  devmenu buff add <buffName> [durationSeconds]\n" +
+                "  devmenu buff remove <buffName>\n" +
                 "  devmenu cheats\n" +
                 "  devmenu cheat <key>\n" +
                 "  devmenu tiles [filter]\n" +
@@ -49,6 +52,8 @@ namespace DevMenu.Commands
                 "  devmenu item gunHandgunT1Pistol 1 6\n" +
                 "  devmenu entity zombieArlene\n" +
                 "  devmenu entity animalWolf 3\n" +
+                "  devmenu buff add buffInjuryAbrasion 300\n" +
+                "  devmenu buff remove buffInjuryAbrasion\n" +
                 "  devmenu cheat noaggro\n" +
                 "  devmenu tile lootChestHero";
         }
@@ -71,8 +76,9 @@ namespace DevMenu.Commands
             {
                 DevMenuItemCatalog.Reload();
                 DevMenuEntityCatalog.Reload();
+                DevMenuBuffCatalog.Reload();
                 LootableTileEntityCatalog.Reload();
-                Output("Reloaded catalogs. Found " + DevMenuItemCatalog.Entries.Count + " items, " + DevMenuEntityCatalog.Entries.Count + " entities, and " + LootableTileEntityCatalog.Entries.Count + " tile entities.");
+                Output("Reloaded catalogs. Found " + DevMenuItemCatalog.Entries.Count + " items, " + DevMenuEntityCatalog.Entries.Count + " entities, " + DevMenuBuffCatalog.Entries.Count + " buffs, and " + LootableTileEntityCatalog.Entries.Count + " tile entities.");
                 return;
             }
 
@@ -97,6 +103,18 @@ namespace DevMenu.Commands
             if (IsSubcommand(_params[0], "entity"))
             {
                 SpawnEntity(_params, _senderInfo);
+                return;
+            }
+
+            if (IsSubcommand(_params[0], "buffs"))
+            {
+                ListBuffs(_params);
+                return;
+            }
+
+            if (IsSubcommand(_params[0], "buff"))
+            {
+                RunBuffAction(_params, _senderInfo);
                 return;
             }
 
@@ -282,6 +300,70 @@ namespace DevMenu.Commands
 
             DevMenuEntitySpawnService.TrySpawnInFrontOfPlayer(senderEntity, entityName, frontCount, out string message);
             Output(message);
+        }
+
+        private static void ListBuffs(List<string> parameters)
+        {
+            string filter = parameters.Count > 1 ? string.Join(" ", parameters.GetRange(1, parameters.Count - 1).ToArray()) : null;
+            int shown = 0;
+
+            Output("Buffs/debuffs: " + DevMenuBuffCatalog.Entries.Count);
+            foreach (DevMenuBuffEntry entry in DevMenuBuffCatalog.Entries)
+            {
+                if (!string.IsNullOrEmpty(filter) && !entry.MatchesSearch(filter))
+                {
+                    continue;
+                }
+
+                Output(entry.BuffName + " - " + entry.DisplayName + FormatSuffix(entry.Category) + FormatSuffix(entry.Flags));
+                shown++;
+                if (shown >= 80)
+                {
+                    Output("Output capped at 80 entries. Refine the filter to narrow the list.");
+                    break;
+                }
+            }
+        }
+
+        private static void RunBuffAction(List<string> parameters, CommandSenderInfo senderInfo)
+        {
+            if (parameters.Count < 3)
+            {
+                Output("Usage: devmenu buff add <buffName> [durationSeconds] OR devmenu buff remove <buffName>");
+                return;
+            }
+
+            string action = parameters[1];
+            string buffName = parameters[2];
+            EntityAlive entity = GetSenderEntity(senderInfo);
+            if (entity == null && !GameManager.IsDedicatedServer)
+            {
+                entity = GameManager.Instance?.World?.GetPrimaryPlayer();
+            }
+
+            if (IsSubcommand(action, "add"))
+            {
+                float durationSeconds = 60f;
+                if (parameters.Count >= 4 && !float.TryParse(parameters[3], NumberStyles.Float, CultureInfo.InvariantCulture, out durationSeconds))
+                {
+                    Output("Invalid duration. Usage: devmenu buff add <buffName> [durationSeconds]");
+                    return;
+                }
+
+                DevMenuBuffService.TryAddToPlayer(entity, buffName, durationSeconds, out string message);
+                Output(message);
+                return;
+            }
+
+            if (IsSubcommand(action, "remove"))
+            {
+                DevMenuBuffService.TryRemoveFromPlayer(entity, buffName, out string message);
+                Output(message);
+                return;
+            }
+
+            Output("Unknown buff action: " + action);
+            Output("Usage: devmenu buff add <buffName> [durationSeconds] OR devmenu buff remove <buffName>");
         }
 
         private static void ListCheats()

@@ -3,13 +3,13 @@
 Dev Menu is an in-game developer toolbox for **7 Days to Die V3.0 "Dead Hot
 Summer"**.
 
-It adds one menu for spawning items and entities, running common developer
-cheats, spawning lootable tile entities, and rerolling loot containers while
-testing.
+It adds one menu for spawning items and entities, applying buffs/debuffs,
+running common developer cheats, spawning lootable tile entities, and rerolling
+loot containers while testing.
 
 ## Features
 
-- Tabbed in-game Dev Menu with `Items`, `Entities`, `Cheats`, and `Tile Entities` tabs.
+- Tabbed in-game Dev Menu with `Items`, `Entities`, `Buffs/Debuffs`, `Cheats`, and `Tile Entities` tabs.
 - Rebindable hotkey in `Options > Controls > Menus`; default key is `/`.
 - Inventory/crafting header icon for opening the menu from the normal UI.
 - `devmenu` and `p7dev` console commands.
@@ -17,6 +17,8 @@ testing.
   selection.
 - Categorized entity browser with search and category filtering for zombies,
   animals, NPCs, vehicles, and utility entities.
+- Categorized buff/debuff browser with search, active status, duration presets,
+  and add/remove actions for testing loaded vanilla and modded buffs.
 - Common cheat toggles and actions for development/testing.
 - Lootable tile entity spawning in front of the player.
 - `Reroll Loot` button on lootable containers to close the container and reset
@@ -68,6 +70,19 @@ The Entities tab lets you browse and spawn loaded entity definitions.
 - Toggle `Filter by category` when searching across categories.
 - Spawn one or five of the selected entity.
 
+## Buffs/Debuffs Tab
+
+The Buffs/Debuffs tab lists loaded buff definitions from the runtime buff
+catalog, including modded buffs.
+
+- Select a category first, such as injuries, disease/poison, status debuffs,
+  drugs/candy, food/drink, healing, equipment/set, environmental, debug/admin,
+  or hidden/utility.
+- Use search to narrow the current list.
+- Toggle `Filter by category` when searching across categories.
+- Choose 30 seconds, 1 minute, 5 minutes, 10 minutes, or 60 minutes.
+- Add the selected buff/debuff to the player or remove it if it is active.
+
 ## Cheats Tab
 
 The Cheats tab includes quick toggles and one-shot actions for common testing
@@ -112,6 +127,9 @@ devmenu item ammo9mmBulletBall 100
 devmenu entities zombie
 devmenu entity zombieArlene
 devmenu entity animalWolf 3
+devmenu buffs injury
+devmenu buff add buffInjuryAbrasion 300
+devmenu buff remove buffInjuryAbrasion
 devmenu cheat god
 devmenu cheat ammo
 devmenu cheat noclip
@@ -131,8 +149,9 @@ devmenu rerollloot 100 64 100
 Dev Menu is an admin/testing mod. Install it on both the server and client for
 multiplayer testing.
 
-The UI runs client-side. Item spawning, tile entity spawning, cheat actions, and
-loot rerolls are routed to the server when needed.
+The UI runs client-side. Item spawning, entity spawning, buff/debuff actions,
+tile entity spawning, cheat actions, and loot rerolls are routed to the server
+when needed.
 
 ## EasyAntiCheat
 

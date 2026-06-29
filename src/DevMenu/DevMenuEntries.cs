@@ -202,6 +202,109 @@ namespace DevMenu
         }
     }
 
+    public sealed class DevMenuBuffCategoryEntry : XUiListEntry<DevMenuBuffCategoryEntry>
+    {
+        public DevMenuBuffCategoryEntry(string category, int sortOrder, int count)
+        {
+            Category = category ?? DevMenuBuffFilterState.AllCategory;
+            SortOrder = sortOrder;
+            Count = count;
+        }
+
+        public string Category { get; }
+
+        public int SortOrder { get; }
+
+        public int Count { get; }
+
+        public override bool MatchesSearch(string search)
+        {
+            if (string.IsNullOrEmpty(search))
+            {
+                return true;
+            }
+
+            return Category.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        public override int CompareTo(DevMenuBuffCategoryEntry other)
+        {
+            int sortCompare = SortOrder.CompareTo(other?.SortOrder ?? int.MaxValue);
+            return sortCompare != 0
+                ? sortCompare
+                : string.Compare(Category, other?.Category, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    public sealed class DevMenuBuffEntry : XUiListEntry<DevMenuBuffEntry>
+    {
+        public DevMenuBuffEntry(string buffName, string displayName, string category, int categorySort, string description, string duration, string flags)
+        {
+            BuffName = buffName ?? "";
+            DisplayName = displayName ?? BuffName;
+            Category = category ?? "";
+            CategorySort = categorySort;
+            Description = description ?? "";
+            Duration = duration ?? "";
+            Flags = flags ?? "";
+        }
+
+        public string BuffName { get; }
+
+        public string DisplayName { get; }
+
+        public string Category { get; }
+
+        public int CategorySort { get; }
+
+        public string Description { get; }
+
+        public string Duration { get; }
+
+        public string Flags { get; }
+
+        public override bool MatchesSearch(string search)
+        {
+            if (string.IsNullOrEmpty(search))
+            {
+                return true;
+            }
+
+            return IndexOf(DisplayName, search) ||
+                IndexOf(BuffName, search) ||
+                IndexOf(Category, search) ||
+                IndexOf(Description, search) ||
+                IndexOf(Duration, search) ||
+                IndexOf(Flags, search);
+        }
+
+        public override int CompareTo(DevMenuBuffEntry other)
+        {
+            int categoryCompare = CategorySort.CompareTo(other?.CategorySort ?? int.MaxValue);
+            if (categoryCompare != 0)
+            {
+                return categoryCompare;
+            }
+
+            categoryCompare = string.Compare(Category, other?.Category, StringComparison.OrdinalIgnoreCase);
+            if (categoryCompare != 0)
+            {
+                return categoryCompare;
+            }
+
+            int nameCompare = string.Compare(DisplayName, other?.DisplayName, StringComparison.OrdinalIgnoreCase);
+            return nameCompare != 0
+                ? nameCompare
+                : string.Compare(BuffName, other?.BuffName, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IndexOf(string value, string search)
+        {
+            return !string.IsNullOrEmpty(value) &&
+                value.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+    }
+
     public sealed class DevMenuCheatEntry : XUiListEntry<DevMenuCheatEntry>
     {
         public DevMenuCheatEntry(string key, string displayName, string description, int sortOrder = 1000)

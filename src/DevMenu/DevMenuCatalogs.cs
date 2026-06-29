@@ -414,15 +414,21 @@ namespace DevMenu
 
             foreach (KeyValuePair<int, EntityClass> pair in EntityClass.list.Dict)
             {
-                int entityClassId = pair.Key;
+                int entityClassKey = pair.Key;
                 EntityClass entityClass = pair.Value;
-                if (entityClass == null || entityClassId <= 0)
+                if (entityClass == null)
                 {
                     continue;
                 }
 
-                string entityName = GetEntityName(entityClass, entityClassId);
+                string entityName = GetEntityName(entityClass, entityClassKey);
                 if (string.IsNullOrEmpty(entityName) || !seenNames.Add(entityName))
+                {
+                    continue;
+                }
+
+                int entityClassId = GetEntityClassId(entityName);
+                if (entityClassId <= 0)
                 {
                     continue;
                 }
@@ -475,7 +481,7 @@ namespace DevMenu
             cachedCategories.Sort();
         }
 
-        private static string GetEntityName(EntityClass entityClass, int entityClassId)
+        private static string GetEntityName(EntityClass entityClass, int entityClassKey)
         {
             if (!string.IsNullOrEmpty(entityClass.entityClassName))
             {
@@ -484,11 +490,28 @@ namespace DevMenu
 
             try
             {
-                return EntityClass.GetEntityClassName(entityClassId);
+                return EntityClass.GetEntityClassName(entityClassKey);
             }
             catch (Exception)
             {
                 return "";
+            }
+        }
+
+        private static int GetEntityClassId(string entityName)
+        {
+            if (string.IsNullOrEmpty(entityName))
+            {
+                return 0;
+            }
+
+            try
+            {
+                return EntityClass.GetId(entityName);
+            }
+            catch (Exception)
+            {
+                return 0;
             }
         }
 
@@ -659,6 +682,364 @@ namespace DevMenu
             {
                 string value = values[i];
                 if (entityName.StartsWith(value, StringComparison.OrdinalIgnoreCase) ||
+                    haystack.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    [Preserve]
+    public static class DevMenuBuffFilterState
+    {
+        public const string AllCategory = "All";
+        public const string OtherCategory = "Other";
+
+        public static string SelectedCategory { get; set; } = AllCategory;
+
+        public static bool FilterByCategory { get; set; } = true;
+
+        public static bool IsCategorySelected(DevMenuBuffEntry entry)
+        {
+            return entry != null &&
+                (SelectedCategory == AllCategory ||
+                entry.Category.Equals(SelectedCategory, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    [Preserve]
+    public static class DevMenuBuffCatalog
+    {
+        private static readonly List<DevMenuBuffEntry> cachedEntries = new List<DevMenuBuffEntry>();
+        private static readonly List<DevMenuBuffCategoryEntry> cachedCategories = new List<DevMenuBuffCategoryEntry>();
+        private static bool loaded;
+
+        public static IReadOnlyList<DevMenuBuffEntry> Entries
+        {
+            get
+            {
+                EnsureLoaded();
+                return cachedEntries;
+            }
+        }
+
+        public static IReadOnlyList<DevMenuBuffCategoryEntry> Categories
+        {
+            get
+            {
+                EnsureLoaded();
+                return cachedCategories;
+            }
+        }
+
+        public static void Reload()
+        {
+            loaded = false;
+            EnsureLoaded();
+        }
+
+        public static bool IsKnownBuff(string buffName, out DevMenuBuffEntry entry)
+        {
+            EnsureLoaded();
+            entry = null;
+
+            for (int i = 0; i < cachedEntries.Count; i++)
+            {
+                if (cachedEntries[i].BuffName.Equals(buffName, StringComparison.OrdinalIgnoreCase))
+                {
+                    entry = cachedEntries[i];
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void EnsureLoaded()
+        {
+            if (loaded)
+            {
+                return;
+            }
+
+            cachedEntries.Clear();
+            cachedCategories.Clear();
+
+            if (BuffManager.Buffs == null)
+            {
+                return;
+            }
+
+            loaded = true;
+
+            foreach (KeyValuePair<string, BuffClass> pair in BuffManager.Buffs)
+            {
+                BuffClass buffClass = pair.Value;
+                if (buffClass == null)
+                {
+                    continue;
+                }
+
+                string buffName = !string.IsNullOrEmpty(buffClass.Name) ? buffClass.Name : pair.Key;
+                if (string.IsNullOrEmpty(buffName))
+                {
+                    continue;
+                }
+
+                cachedEntries.Add(new DevMenuBuffEntry(
+                    buffName,
+                    GetDisplayName(buffClass, buffName),
+                    GetCategory(buffClass, buffName, out int categorySort),
+                    categorySort,
+                    GetDescription(buffClass),
+                    FormatDefinitionDuration(buffClass),
+                    BuildFlags(buffClass)));
+            }
+
+            cachedEntries.Sort();
+            RebuildCategories();
+        }
+
+        private static void RebuildCategories()
+        {
+            cachedCategories.Clear();
+            cachedCategories.Add(new DevMenuBuffCategoryEntry(DevMenuBuffFilterState.AllCategory, 0, cachedEntries.Count));
+
+            var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var sortOrders = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            for (int i = 0; i < cachedEntries.Count; i++)
+            {
+                DevMenuBuffEntry entry = cachedEntries[i];
+                if (!counts.ContainsKey(entry.Category))
+                {
+                    counts[entry.Category] = 0;
+                    sortOrders[entry.Category] = entry.CategorySort;
+                }
+
+                counts[entry.Category]++;
+                if (entry.CategorySort < sortOrders[entry.Category])
+                {
+                    sortOrders[entry.Category] = entry.CategorySort;
+                }
+            }
+
+            foreach (KeyValuePair<string, int> count in counts)
+            {
+                cachedCategories.Add(new DevMenuBuffCategoryEntry(count.Key, sortOrders[count.Key], count.Value));
+            }
+
+            cachedCategories.Sort();
+        }
+
+        private static string GetDisplayName(BuffClass buffClass, string fallback)
+        {
+            if (!string.IsNullOrEmpty(buffClass.LocalizedName))
+            {
+                return buffClass.LocalizedName;
+            }
+
+            try
+            {
+                string localizedName = Localization.Get(fallback);
+                return string.IsNullOrEmpty(localizedName) ? fallback : localizedName;
+            }
+            catch (Exception)
+            {
+                return fallback;
+            }
+        }
+
+        private static string GetDescription(BuffClass buffClass)
+        {
+            if (!string.IsNullOrEmpty(buffClass.Description))
+            {
+                return buffClass.Description;
+            }
+
+            if (!string.IsNullOrEmpty(buffClass.DescriptionKey))
+            {
+                try
+                {
+                    string localizedDescription = Localization.Get(buffClass.DescriptionKey);
+                    return string.IsNullOrEmpty(localizedDescription) ? buffClass.DescriptionKey : localizedDescription;
+                }
+                catch (Exception)
+                {
+                    return buffClass.DescriptionKey;
+                }
+            }
+
+            return "";
+        }
+
+        private static string GetCategory(BuffClass buffClass, string buffName, out int categorySort)
+        {
+            string name = buffName.ToLowerInvariant();
+            string haystack = (buffName + "," + GetDescription(buffClass) + "," + SafeTagString(buffClass.NameTag) + "," + SafeTagString(buffClass.Tags)).ToLowerInvariant();
+
+            if (IsDebuff(buffClass, name, haystack))
+            {
+                if (ContainsAny(name, haystack, "injury", "abrasion", "laceration", "sprain", "sprained", "broken", "fracture", "concussion", "cripple"))
+                {
+                    categorySort = 10;
+                    return "Injuries";
+                }
+
+                if (ContainsAny(name, haystack, "infection", "dysentery", "disease", "poison", "sick", "illness", "radiation"))
+                {
+                    categorySort = 20;
+                    return "Disease/Poison";
+                }
+
+                if (ContainsAny(name, haystack, "bleed", "burn", "fire", "shock", "stun", "fatigue", "hungry", "thirst", "cold", "heat", "wet", "encumber"))
+                {
+                    categorySort = 30;
+                    return "Status Debuffs";
+                }
+
+                categorySort = 40;
+                return "Debuffs";
+            }
+
+            if (ContainsAny(name, haystack, "drug", "candy", "vitamin", "steroid", "recog", "fortbites", "beer", "coffee", "mega", "elixir", "sauce", "moonshine"))
+            {
+                categorySort = 100;
+                return "Drugs/Candy";
+            }
+
+            if (ContainsAny(name, haystack, "food", "drink", "meal", "tea", "juice", "smoothie", "water"))
+            {
+                categorySort = 110;
+                return "Food/Drink";
+            }
+
+            if (ContainsAny(name, haystack, "heal", "medical", "treated", "splint", "cast", "bandage", "firstaid", "health"))
+            {
+                categorySort = 120;
+                return "Healing";
+            }
+
+            if (ContainsAny(name, haystack, "setbonus", "set_bonus", "armor", "lumberjack", "preacher", "rogue", "athletic", "enforcer", "farmer", "biker", "scavenger", "ranger", "nerd", "commando", "nomad", "miner", "assassin"))
+            {
+                categorySort = 130;
+                return "Equipment/Set";
+            }
+
+            if (ContainsAny(name, haystack, "perk", "skill", "challenge", "quest", "progression", "learning", "xp", "level"))
+            {
+                categorySort = 140;
+                return "Progression";
+            }
+
+            if (ContainsAny(name, haystack, "weather", "biome", "radiation", "storm", "cold", "heat", "shelter", "underwater"))
+            {
+                categorySort = 150;
+                return "Environmental";
+            }
+
+            if (ContainsAny(name, haystack, "god", "debug", "test", "admin", "show", "devmenu", "twitch"))
+            {
+                categorySort = 160;
+                return "Debug/Admin";
+            }
+
+            if (buffClass.Hidden || !buffClass.ShowOnHUD)
+            {
+                categorySort = 900;
+                return "Hidden/Utility";
+            }
+
+            categorySort = 200;
+            return "Buffs";
+        }
+
+        private static bool IsDebuff(BuffClass buffClass, string name, string haystack)
+        {
+            return buffClass.DamageType != EnumDamageTypes.None ||
+                ContainsAny(name, haystack, "debuff", "injury", "infection", "dysentery", "disease", "poison", "bleed", "burn", "shock", "stun", "fatigue", "hungry", "thirst", "cold", "heat", "wet", "encumber", "sprain", "broken", "abrasion", "laceration", "concussion");
+        }
+
+        private static string BuildFlags(BuffClass buffClass)
+        {
+            var flags = new List<string>();
+
+            if (buffClass.DamageType != EnumDamageTypes.None)
+            {
+                flags.Add("debuff");
+            }
+
+            if (buffClass.Hidden)
+            {
+                flags.Add("hidden");
+            }
+
+            if (buffClass.ShowOnHUD)
+            {
+                flags.Add("hud");
+            }
+
+            if (!buffClass.RemoveOnDeath)
+            {
+                flags.Add("keeps death");
+            }
+
+            if (buffClass.DurationMax > 0f)
+            {
+                flags.Add("timed");
+            }
+
+            return string.Join(", ", flags.ToArray());
+        }
+
+        private static string FormatDefinitionDuration(BuffClass buffClass)
+        {
+            return buffClass.DurationMax > 0f
+                ? FormatDuration(buffClass.DurationMax)
+                : "Default";
+        }
+
+        public static string FormatDuration(float seconds)
+        {
+            if (seconds <= 0f)
+            {
+                return "";
+            }
+
+            if (seconds > 3600f && Math.Abs(seconds % 3600f) < 0.01f)
+            {
+                return ((int)(seconds / 3600f)) + "h";
+            }
+
+            if (seconds >= 60f && Math.Abs(seconds % 60f) < 0.01f)
+            {
+                return ((int)(seconds / 60f)) + "m";
+            }
+
+            return ((int)Math.Round(seconds)) + "s";
+        }
+
+        private static string SafeTagString(FastTags<TagGroup.Global> tags)
+        {
+            try
+            {
+                return tags.ToString();
+            }
+            catch (Exception)
+            {
+                return "";
+            }
+        }
+
+        private static bool ContainsAny(string buffName, string haystack, params string[] values)
+        {
+            for (int i = 0; i < values.Length; i++)
+            {
+                string value = values[i];
+                if (buffName.StartsWith(value, StringComparison.OrdinalIgnoreCase) ||
                     haystack.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     return true;
