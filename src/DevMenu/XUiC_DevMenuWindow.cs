@@ -183,6 +183,17 @@ namespace DevMenu
             }
         }
 
+        public override void OnOpen()
+        {
+            if (!EnsureAccess())
+            {
+                xui.playerUI.windowManager.Close(WindowGroupName);
+                return;
+            }
+
+            base.OnOpen();
+        }
+
         private XUiC_SimpleButton GetSimpleButton(string id)
         {
             XUiController controller = GetChildById(id);
@@ -406,6 +417,12 @@ namespace DevMenu
 
         private void ReloadButton_OnPressed(XUiController sender, int mouseButton)
         {
+            if (!EnsureAccess())
+            {
+                return;
+            }
+
+            DevMenuSettings.Reload();
             DevMenuItemCatalog.Reload();
             DevMenuEntityCatalog.Reload();
             DevMenuBuffCatalog.Reload();
@@ -568,6 +585,11 @@ namespace DevMenu
                 return;
             }
 
+            if (!EnsureAccess())
+            {
+                return;
+            }
+
             DevMenuItemSpawnService.RequestGiveToPrimaryPlayer(entry.ItemName, count, quality, out string message);
             Output(message);
         }
@@ -579,6 +601,11 @@ namespace DevMenu
                 return;
             }
 
+            if (!EnsureAccess())
+            {
+                return;
+            }
+
             DevMenuEntitySpawnService.RequestSpawnInFrontOfPrimaryPlayer(entry.EntityName, count, out string message);
             Output(message);
         }
@@ -586,6 +613,11 @@ namespace DevMenu
         private void AddBuff(DevMenuBuffEntry entry)
         {
             if (entry == null)
+            {
+                return;
+            }
+
+            if (!EnsureAccess())
             {
                 return;
             }
@@ -602,6 +634,11 @@ namespace DevMenu
                 return;
             }
 
+            if (!EnsureAccess())
+            {
+                return;
+            }
+
             DevMenuBuffService.RequestRemoveFromPrimaryPlayer(entry.BuffName, out string message);
             Output(message);
             buffList?.RebuildList(_resetFilter: false);
@@ -610,6 +647,11 @@ namespace DevMenu
         private void ToggleCheat(DevMenuCheatEntry entry)
         {
             if (entry == null)
+            {
+                return;
+            }
+
+            if (!EnsureAccess())
             {
                 return;
             }
@@ -626,8 +668,24 @@ namespace DevMenu
                 return;
             }
 
+            if (!EnsureAccess())
+            {
+                return;
+            }
+
             LootableTileEntitySpawnService.RequestSpawnInFrontOfPrimaryPlayer(entry.BlockName, out string message);
             Output(message);
+        }
+
+        private static bool EnsureAccess()
+        {
+            if (DevMenuAccess.CanLocalPlayerUseDevMenu(out string message))
+            {
+                return true;
+            }
+
+            Output(message);
+            return false;
         }
 
         private static void Output(string message)

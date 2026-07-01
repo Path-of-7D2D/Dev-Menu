@@ -49,6 +49,36 @@ Use any of these options:
 - Click the Dev Menu icon in the inventory/crafting header.
 - Open the console and run `devmenu` or `p7dev`.
 
+## Permissions
+
+Dev Menu includes an XML config option at
+`Config/devmenu_config.xml`:
+
+```xml
+<DevMenuConfig>
+  <EnablePermissionCheck>true</EnablePermissionCheck>
+</DevMenuConfig>
+```
+
+`EnablePermissionCheck` defaults to `true`. When enabled, Dev Menu uses the
+vanilla admin command permission for `devmenu`/`p7dev` before allowing access.
+Players without permission cannot run Dev Menu console actions, open the menu
+from the hotkey, or open it by clicking the header icon. The header icon is also
+hidden when the client cannot use the menu.
+
+Set the command permission in `serveradmin.xml` to choose who can use it:
+
+```xml
+<permissions>
+  <permission cmd="devmenu" permission_level="0" />
+  <permission cmd="p7dev" permission_level="0" />
+</permissions>
+```
+
+Use the permission level that matches your server's admin policy. Set
+`EnablePermissionCheck` to `false` only if every player with the mod installed
+should be able to use Dev Menu.
+
 ## Items Tab
 
 The Items tab lets you browse and spawn loaded item definitions.

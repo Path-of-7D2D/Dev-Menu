@@ -66,6 +66,12 @@ namespace DevMenu
                 return;
             }
 
+            if (!DevMenuAccess.CanLocalPlayerUseDevMenu(out string message))
+            {
+                SingletonMonoBehaviour<SdtdConsole>.Instance.Output("[DevMenu] " + message);
+                return;
+            }
+
             LocalPlayerUI playerUi = LocalPlayerUI.GetUIForPlayer(player);
             if (playerUi == null || playerUi.windowManager == null)
             {

@@ -60,6 +60,12 @@ namespace DevMenu.Commands
 
         public override void Execute(List<string> _params, CommandSenderInfo _senderInfo)
         {
+            if (!DevMenuAccess.CanUseFromCommand(_senderInfo, out string accessMessage))
+            {
+                Output(accessMessage);
+                return;
+            }
+
             if (_params.Count == 0 || IsSubcommand(_params[0], "open"))
             {
                 OpenWindow();

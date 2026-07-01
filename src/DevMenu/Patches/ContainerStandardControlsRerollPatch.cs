@@ -17,12 +17,20 @@ namespace DevMenu.Patches
                 return;
             }
 
+            DevMenuAccess.ApplyDevMenuButtonVisibility(button);
+
             button.OnPress -= OnRerollLootPressed;
             button.OnPress += OnRerollLootPressed;
         }
 
         private static void OnRerollLootPressed(XUiController sender, int mouseButton)
         {
+            if (!DevMenuAccess.CanLocalPlayerUseDevMenu(out string message))
+            {
+                SingletonMonoBehaviour<SdtdConsole>.Instance.Output("[DevMenu] " + message);
+                return;
+            }
+
             XUiC_ContainerStandardControls controls = sender?.GetParentByType<XUiC_ContainerStandardControls>();
             if (controls == null)
             {

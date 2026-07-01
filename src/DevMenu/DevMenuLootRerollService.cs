@@ -10,6 +10,12 @@ namespace DevMenu
         {
             message = null;
 
+            if (!DevMenuAccess.CanLocalPlayerUseDevMenu(out message))
+            {
+                Log.Warning("[DevMenu] " + message);
+                return false;
+            }
+
             XUiC_LootWindow lootWindow = controls?.GetParentByType<XUiC_LootWindow>();
             if (lootWindow == null)
             {
